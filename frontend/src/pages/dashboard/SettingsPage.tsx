@@ -1,0 +1,266 @@
+import { useState } from "react"
+import { Timer, Settings2, Moon, Sun, User, Edit2 } from "lucide-react"
+import { useAppStore } from "@/store/useAppStore"
+
+export default function SettingsPage() {
+  const { user } = useAppStore()
+  const [pomodoroLength, setPomodoroLength] = useState(25)
+  const [shortBreakLength, setShortBreakLength] = useState(5)
+  const [longBreakLength, setLongBreakLength] = useState(15)
+
+  const [desktopEnabled, setDesktopEnabled] = useState(true)
+  const [autoBreakEnabled, setAutoBreakEnabled] = useState(false)
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("light")
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-8 px-8 py-12">
+      {/* Header */}
+      <div className="mb-10">
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+          Settings
+        </h2>
+        <p className="mt-2 text-slate-500 dark:text-slate-400">
+          Manage your focus sessions and preferences
+        </p>
+      </div>
+
+      <div className="space-y-8">
+        {/* Timer Configuration Section */}
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="border-b border-slate-100 p-6 dark:border-slate-800">
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
+              <Timer className="h-5 w-5 text-primary" />
+              Timer Configuration
+            </h3>
+          </div>
+          <div className="space-y-8 p-6">
+            {/* Pomodoro */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Pomodoro Duration
+                </label>
+                <span className="rounded-lg bg-slate-100 px-3 py-1 text-sm font-bold text-primary dark:bg-slate-800">
+                  {pomodoroLength}m
+                </span>
+              </div>
+              <div className="group relative flex h-6 w-full items-center">
+                <div className="absolute h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                <div
+                  className="absolute h-1.5 rounded-full bg-primary"
+                  style={{ width: `${(pomodoroLength / 60) * 100}%` }}
+                ></div>
+                <div
+                  className="absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md pointer-events-none"
+                  style={{ left: `${(pomodoroLength / 60) * 100}%` }}
+                ></div>
+                <input
+                  className="absolute h-1.5 w-full cursor-pointer appearance-none opacity-0 z-10"
+                  max="60"
+                  min="5"
+                  type="range"
+                  value={pomodoroLength}
+                  onChange={(e) => setPomodoroLength(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            {/* Short Break */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Short Break Duration
+                </label>
+                <span className="rounded-lg bg-slate-100 px-3 py-1 text-sm font-bold text-primary dark:bg-slate-800">
+                  {shortBreakLength}m
+                </span>
+              </div>
+              <div className="group relative flex h-6 w-full items-center">
+                <div className="absolute h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                <div
+                  className="absolute h-1.5 rounded-full bg-primary"
+                  style={{ width: `${(shortBreakLength / 15) * 100}%` }}
+                ></div>
+                <div
+                  className="absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md pointer-events-none"
+                  style={{ left: `${(shortBreakLength / 15) * 100}%` }}
+                ></div>
+                <input
+                  className="absolute h-1.5 w-full cursor-pointer appearance-none opacity-0 z-10"
+                  max="15"
+                  min="1"
+                  type="range"
+                  value={shortBreakLength}
+                  onChange={(e) => setShortBreakLength(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            {/* Long Break */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Long Break Duration
+                </label>
+                <span className="rounded-lg bg-slate-100 px-3 py-1 text-sm font-bold text-primary dark:bg-slate-800">
+                  {longBreakLength}m
+                </span>
+              </div>
+              <div className="group relative flex h-6 w-full items-center">
+                <div className="absolute h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                <div
+                  className="absolute h-1.5 rounded-full bg-primary"
+                  style={{ width: `${((longBreakLength - 10) / 20) * 100}%` }}
+                ></div>
+                <div
+                  className="absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md pointer-events-none"
+                  style={{ left: `${((longBreakLength - 10) / 20) * 100}%` }}
+                ></div>
+                <input
+                  className="absolute h-1.5 w-full cursor-pointer appearance-none opacity-0 z-10"
+                  max="30"
+                  min="10"
+                  type="range"
+                  value={longBreakLength}
+                  onChange={(e) => setLongBreakLength(Number(e.target.value))}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Preferences Section */}
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="border-b border-slate-100 p-6 dark:border-slate-800">
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
+              <Settings2 className="h-5 w-5 text-primary" />
+              Preferences
+            </h3>
+          </div>
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {/* Desktop Notifications */}
+            <div className="flex items-center justify-between p-6">
+              <div className="flex flex-col">
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  Desktop Notifications
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Receive alerts when session ends
+                </p>
+              </div>
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={desktopEnabled}
+                  onChange={() => setDesktopEnabled(!desktopEnabled)}
+                />
+                <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-slate-700"></div>
+              </label>
+            </div>
+
+            {/* Theme Toggle */}
+            <div className="flex items-center justify-between p-6">
+              <div className="flex flex-col">
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  Theme Mode
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Switch between light and dark interface
+                </p>
+              </div>
+              <div className="flex items-center rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+                <button
+                  onClick={() => setThemeMode("light")}
+                  className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-all ${
+                    themeMode === "light"
+                      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                      : "text-slate-500 hover:text-primary dark:text-slate-400"
+                  }`}
+                >
+                  <Sun className="h-4 w-4" />
+                  Light
+                </button>
+                <button
+                  onClick={() => setThemeMode("dark")}
+                  className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-all ${
+                    themeMode === "dark"
+                      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                      : "text-slate-500 hover:text-primary dark:text-slate-400"
+                  }`}
+                >
+                  <Moon className="h-4 w-4" />
+                  Dark
+                </button>
+              </div>
+            </div>
+
+            {/* Auto-start Breaks */}
+            <div className="flex items-center justify-between p-6">
+              <div className="flex flex-col">
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  Auto-start Breaks
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Begin break timer automatically after pomodoro
+                </p>
+              </div>
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={autoBreakEnabled}
+                  onChange={() => setAutoBreakEnabled(!autoBreakEnabled)}
+                />
+                <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-slate-700"></div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        {/* Profile Section */}
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="border-b border-slate-100 p-6 dark:border-slate-800">
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
+              <User className="h-5 w-5 text-primary" />
+              Account
+            </h3>
+          </div>
+          <div className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="group relative">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-slate-200 dark:border-slate-700 dark:bg-slate-800">
+                  <User className="h-8 w-8 text-slate-400" />
+                </div>
+                <button className="absolute bottom-0 right-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
+                  <Edit2 className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-slate-900 dark:text-white">
+                  {user.name}
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {user.name.toLowerCase()}@example.com
+                </p>
+              </div>
+              <button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                Manage Subscription
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Save Changes Floating Footer */}
+        <div className="flex items-center justify-end gap-3 pt-4">
+          <button className="rounded-lg px-6 py-2.5 font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+            Discard
+          </button>
+          <button className="rounded-lg bg-primary px-8 py-2.5 font-bold text-white shadow-lg shadow-primary/20 transition-all hover:opacity-90">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
