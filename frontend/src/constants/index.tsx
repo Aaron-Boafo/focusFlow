@@ -1,5 +1,5 @@
 import { CheckCircle2, Timer, BarChart3 } from "lucide-react"
-import type { IStatistics, IFeatures } from "@/types"
+import type { IStatistics, IFeatures, Project, KanbanTask, ProductivityData, Task } from "@/types"
 
 export const features: IFeatures[] = [
   {
@@ -38,4 +38,180 @@ export const Statistics: IStatistics[] = [
     growth: "+25%",
     pct: "92%",
   },
+]
+
+export const initialTasks: Task[] = [
+  {
+    id: "1",
+    title: "Design UI Dashboard",
+    category: "Product Design",
+    time: "10:00 AM",
+    completed: false,
+  },
+  {
+    id: "2",
+    title: "Team Meeting",
+    category: "Communication",
+    time: "2:00 PM",
+    completed: false,
+  },
+  {
+    id: "3",
+    title: "Review Pull Requests",
+    category: "Development",
+    time: "4:30 PM",
+    completed: false,
+  },
+]
+
+export const initialProductivity: ProductivityData[] = [
+  { day: "Mon", hours: 6.5, total: 10 },
+  { day: "Tue", hours: 4.5, total: 10 },
+  { day: "Wed", hours: 8.5, total: 10 },
+  { day: "Thu", hours: 5.5, total: 10 },
+  { day: "Fri", hours: 9.5, total: 10 },
+  { day: "Sat", hours: 3.0, total: 10 },
+  { day: "Sun", hours: 4.0, total: 10 },
+]
+
+export const initialKanbanTasks: KanbanTask[] = [
+  {
+    id: "k1",
+    title: "Design System Update",
+    description: "Update the UI components to rounded-lg corners across all landing pages.",
+    status: "todo",
+    priority: "High Priority",
+    xp: 50,
+    date: "Oct 24",
+    assignees: [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAcMdyZzhXY4c_j9qJUwzbgFhia2DNqWhZsl1bUCALc4hO8bXgXwKOgMywYKXFTgRXpSEuzTXmr2C7tBFq0mqvzGMnzu2trQVjgTLIc_IwU7X4SX1PfF5q2c_Hxw3z0e95db8OsE6aIPsKfTLdZ3krmLzfS-j-1JzFza3hQH5-Brk15LqsSx95GQ0lbCXu0w-H0pNNX1czxLtms6fqdhFMB7POzQaeLs2xC05ZPGoBJCZ4gQnuauQ-FVPN-x3yJqtB3Qy5rPHwVwg",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBdLR2eaYpE8wTZ16LCEdkYiugRXXlbuF582FEl7mlc5ICfjrqxLjtomZ3hVieVqfNQ2MHIYsyE3xcHMalTPovzrpijdQ6NwQIcPW66bg1oAQOrUJslNTrv0KcUFQ-u1fddO5F6ikSFEW9o5BNya63BE1N_lzczZAfJyZQOXIsLPFRwP-nd3usclOtieT2ZtB8S1-hrEnAAIBZHJxWki480PaOVsTZY9Hy2xwp0Hm0eAkpS8qtF6ReC8vHZAteFF7bz3DMusJ-U2Q"
+    ],
+  },
+  {
+    id: "k2",
+    title: "User Feedback Analysis",
+    description: "Compile and categorize the feedback from last month's beta testers.",
+    status: "todo",
+    priority: "Medium",
+    xp: 30,
+    assignees: [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCgxCEmw_erLIRki_bo1ODqoF6aSlv8ht7_7nsLhYz0IsxWaMjLoaN48HGolC18hwj6C122ZoeyD4RGYg-wxbXnicV6tSUN2fxe_16jhNUrOI4EHT7bLRBnHj_Mx03A1Q-9gF9LeDnR_899pDfR_SWU5ZuQrLUxAQNhalO4SmKoxj3E35fMA4pDdC1L-8LYBDEdOj7vh5YNfONZ_RPmulp8MdzLtzgAg1hznIyrFTIeHupO7OsBuAMDz7_bNMRzOKjWLIA38F870Q"
+    ],
+  },
+  {
+    id: "k3",
+    title: "API Integration: Stripe",
+    description: "Finish the subscription management webhooks and testing.",
+    status: "in-progress",
+    priority: "In Review",
+    xp: 75,
+    progress: 65,
+    attachments: 3,
+    checklistData: "8/12",
+    assignees: [
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCKkfZ7NVKQxuzuy3yaWvc5v_oL_7Dnp_La-k-GreERhy1d-0EbW4U6IMtm7zvcKFZ9ETN2gm_XRc8oJyjfWTftMPkvPGG8Ag_RjCiIDP2u2MHx-Rg3u6B5ZByDq0wDxB6G49mAPWtXerllk5QfzQFfkTHsFlGw0ar_obMn55feQOn3MWZon2r4a4cAIkvK392QcBvnRcjKGhhqsJqCWYuXXvNtosB_GySZD_t57q3gVh9vUi2NrRhekqv1J57UV8hSosqw0sy8CA"
+    ],
+  },
+  {
+    id: "k4",
+    title: "Landing Page Hero Animation",
+    description: "Implement the Lottie animations for the main hero section.",
+    status: "done",
+    priority: "Completed",
+    xp: 100,
+    date: "Yesterday",
+  },
+  {
+    id: "k5",
+    title: "Bug: Login Redirect",
+    description: "Fixed the issue where users were redirected to 404 after login.",
+    status: "done",
+    priority: "Completed",
+    xp: 50,
+    date: "Oct 20",
+  },
+]
+
+export const initialProjects: Project[] = [
+  {
+    id: "p1",
+    title: "FocusFlow Redesign",
+    status: "On Track",
+    description: "Refreshing our application design and modernizing the primary dashboard views.",
+    icon: "Target",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-blue-100 dark:bg-blue-900/30",
+    difficulty: "Hard",
+    importance: "CRITICAL",
+    deadline: "2024-12-31",
+    progress: 65,
+    tasksLeft: 12,
+    contributors: ["user1", "user2", "user3", "user4", "user5"],
+    tasks: []
+  },
+  {
+    id: "p2",
+    title: "Mobile App v2.0",
+    status: "At Risk",
+    description: "Complete overhaul of the user experience for our iOS and Android applications with offline sync features.",
+    icon: "Smartphone",
+    iconColor: "text-purple-600 dark:text-purple-400",
+    iconBg: "bg-purple-100 dark:bg-purple-900/30",
+    difficulty: "Hard",
+    importance: "HIGH",
+    deadline: "2024-11-15",
+    progress: 32,
+    tasksLeft: 48,
+    contributors: ["user1", "user2", "user3", "user4", "user5", "user6", "user7"],
+    tasks: []
+  },
+  {
+    id: "p3",
+    title: "Q4 Sales Strategy",
+    status: "On Track",
+    description: "Formulating the lead generation and conversion strategy for the upcoming fiscal quarter.",
+    icon: "TrendingUp",
+    iconColor: "text-orange-600 dark:text-orange-400",
+    iconBg: "bg-orange-100 dark:bg-orange-900/30",
+    difficulty: "Medium",
+    importance: "HIGH",
+    deadline: "2024-10-01",
+    progress: 88,
+    tasksLeft: 3,
+    contributors: ["user1", "user2"],
+    tasks: []
+  },
+  {
+    id: "p4",
+    title: "Customer Support Portal",
+    status: "Planned",
+    description: "Building a self-service knowledge base and ticketing system integration for 24/7 user help.",
+    icon: "HeadphonesIcon",
+    iconColor: "text-slate-500",
+    iconBg: "bg-slate-100 dark:bg-slate-800",
+    difficulty: "Medium",
+    importance: "MEDIUM",
+    deadline: "2025-01-15",
+    progress: 5,
+    tasksLeft: 15,
+    contributors: ["user1", "user2"],
+    tasks: []
+  },
+  {
+    id: "p5",
+    title: "API Documentation",
+    status: "On Track",
+    description: "Standardizing the developer API docs using Swagger and adding interactive code examples.",
+    icon: "CodeSquare",
+    iconColor: "text-rose-600 dark:text-rose-400",
+    iconBg: "bg-rose-100 dark:bg-rose-900/30",
+    difficulty: "Easy",
+    importance: "LOW",
+    deadline: "2024-10-31",
+    progress: 45,
+    tasksLeft: 8,
+    contributors: ["user1", "user2"],
+    tasks: []
+  }
 ]

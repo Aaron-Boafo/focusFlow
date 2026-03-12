@@ -19,7 +19,7 @@ export function App() {
       {/* Dashboard Routes wrapped in the persistent Layout */}
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/tasks" element={<TaskBoardPage />} />
+        <Route path="/tasks/*" element={<TaskBoardPage />} />
         <Route path="/timer" element={<TimerPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/settings" element={<SettingsPage />} />

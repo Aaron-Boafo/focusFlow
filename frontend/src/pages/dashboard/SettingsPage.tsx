@@ -1,16 +1,52 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Timer, Settings2, Moon, Sun, User, Edit2 } from "lucide-react"
 import { useAppStore } from "@/store/useAppStore"
+import { SessionStore } from "@/store/SessionStore"
 
 export default function SettingsPage() {
   const { user } = useAppStore()
-  const [pomodoroLength, setPomodoroLength] = useState(25)
-  const [shortBreakLength, setShortBreakLength] = useState(5)
-  const [longBreakLength, setLongBreakLength] = useState(15)
+  
+  // Use selectors for better reactivity
+  const settings = SessionStore((state) => state.settings)
+  const updateSettings = SessionStore((state) => state.updateSettings)
+
+  const [pomodoroLength, setPomodoroLength] = useState(settings.focus / 60)
+  const [shortBreakLength, setShortBreakLength] = useState(
+    settings.shortBreak / 60
+  )
+  const [longBreakLength, setLongBreakLength] = useState(
+    settings.longBreak / 60
+  )
 
   const [desktopEnabled, setDesktopEnabled] = useState(true)
   const [autoBreakEnabled, setAutoBreakEnabled] = useState(false)
   const [themeMode, setThemeMode] = useState<"light" | "dark">("light")
+  
+  const [isSaved, setIsSaved] = useState(false)
+
+  // Sync local state when settings change (e.g. from storage load)
+  useEffect(() => {
+    setPomodoroLength(settings.focus / 60)
+    setShortBreakLength(settings.shortBreak / 60)
+    setLongBreakLength(settings.longBreak / 60)
+  }, [settings])
+
+  const handleSave = () => {
+    updateSettings({
+      focus: pomodoroLength * 60,
+      shortBreak: shortBreakLength * 60,
+      longBreak: longBreakLength * 60,
+    })
+    setIsSaved(true)
+    setTimeout(() => setIsSaved(false), 3000)
+  }
+
+  const handleDiscard = () => {
+    setPomodoroLength(settings.focus / 60)
+    setShortBreakLength(settings.shortBreak / 60)
+    setLongBreakLength(settings.longBreak / 60)
+    setIsSaved(false)
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-8 py-12">
@@ -48,16 +84,16 @@ export default function SettingsPage() {
                 <div className="absolute h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
                 <div
                   className="absolute h-1.5 rounded-full bg-primary"
-                  style={{ width: `${(pomodoroLength / 60) * 100}%` }}
+                  style={{ width: `${(pomodoroLength / 240) * 100}%` }}
                 ></div>
                 <div
-                  className="absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md pointer-events-none"
-                  style={{ left: `${(pomodoroLength / 60) * 100}%` }}
+                  className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md"
+                  style={{ left: `${(pomodoroLength / 240) * 100}%` }}
                 ></div>
                 <input
-                  className="absolute h-1.5 w-full cursor-pointer appearance-none opacity-0 z-10"
-                  max="60"
-                  min="5"
+                  className="absolute z-10 h-1.5 w-full cursor-pointer appearance-none opacity-0"
+                  max="240"
+                  min="1"
                   type="range"
                   value={pomodoroLength}
                   onChange={(e) => setPomodoroLength(Number(e.target.value))}
@@ -79,15 +115,15 @@ export default function SettingsPage() {
                 <div className="absolute h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
                 <div
                   className="absolute h-1.5 rounded-full bg-primary"
-                  style={{ width: `${(shortBreakLength / 15) * 100}%` }}
+                  style={{ width: `${(shortBreakLength / 30) * 100}%` }}
                 ></div>
                 <div
-                  className="absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md pointer-events-none"
-                  style={{ left: `${(shortBreakLength / 15) * 100}%` }}
+                  className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md"
+                  style={{ left: `${(shortBreakLength / 30) * 100}%` }}
                 ></div>
                 <input
-                  className="absolute h-1.5 w-full cursor-pointer appearance-none opacity-0 z-10"
-                  max="15"
+                  className="absolute z-10 h-1.5 w-full cursor-pointer appearance-none opacity-0"
+                  max="30"
                   min="1"
                   type="range"
                   value={shortBreakLength}
@@ -110,16 +146,16 @@ export default function SettingsPage() {
                 <div className="absolute h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
                 <div
                   className="absolute h-1.5 rounded-full bg-primary"
-                  style={{ width: `${((longBreakLength - 10) / 20) * 100}%` }}
+                  style={{ width: `${(longBreakLength / 60) * 100}%` }}
                 ></div>
                 <div
-                  className="absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md pointer-events-none"
-                  style={{ left: `${((longBreakLength - 10) / 20) * 100}%` }}
+                  className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 cursor-pointer rounded-full border-2 border-primary bg-white shadow-md"
+                  style={{ left: `${(longBreakLength / 60) * 100}%` }}
                 ></div>
                 <input
-                  className="absolute h-1.5 w-full cursor-pointer appearance-none opacity-0 z-10"
-                  max="30"
-                  min="10"
+                  className="absolute z-10 h-1.5 w-full cursor-pointer appearance-none opacity-0"
+                  max="60"
+                  min="1"
                   type="range"
                   value={longBreakLength}
                   onChange={(e) => setLongBreakLength(Number(e.target.value))}
@@ -155,7 +191,7 @@ export default function SettingsPage() {
                   checked={desktopEnabled}
                   onChange={() => setDesktopEnabled(!desktopEnabled)}
                 />
-                <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-slate-700"></div>
+                <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-slate-700"></div>
               </label>
             </div>
 
@@ -212,7 +248,7 @@ export default function SettingsPage() {
                   checked={autoBreakEnabled}
                   onChange={() => setAutoBreakEnabled(!autoBreakEnabled)}
                 />
-                <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-slate-700"></div>
+                <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-slate-700"></div>
               </label>
             </div>
           </div>
@@ -232,7 +268,7 @@ export default function SettingsPage() {
                 <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-slate-200 dark:border-slate-700 dark:bg-slate-800">
                   <User className="h-8 w-8 text-slate-400" />
                 </div>
-                <button className="absolute bottom-0 right-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
+                <button className="absolute right-0 bottom-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
                   <Edit2 className="h-3 w-3" />
                 </button>
               </div>
@@ -252,13 +288,26 @@ export default function SettingsPage() {
         </section>
 
         {/* Save Changes Floating Footer */}
-        <div className="flex items-center justify-end gap-3 pt-4">
-          <button className="rounded-lg px-6 py-2.5 font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
-            Discard
-          </button>
-          <button className="rounded-lg bg-primary px-8 py-2.5 font-bold text-white shadow-lg shadow-primary/20 transition-all hover:opacity-90">
-            Save Changes
-          </button>
+        <div className="flex items-center justify-end gap-4 pt-4">
+          {isSaved && (
+            <span className="text-sm font-medium text-emerald-600 animate-in fade-in slide-in-from-right-2">
+              Changes saved successfully!
+            </span>
+          )}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleDiscard}
+              className="rounded-lg px-6 py-2.5 font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+            >
+              Discard
+            </button>
+            <button
+              onClick={handleSave}
+              className="rounded-lg bg-primary px-8 py-2.5 font-bold text-white shadow-lg shadow-primary/20 transition-all hover:opacity-90 active:scale-95"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>

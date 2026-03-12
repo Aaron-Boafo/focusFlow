@@ -1,4 +1,4 @@
-import type { KanbanTask } from "@/store/useAppStore"
+import type { KanbanTask } from "@/types"
 import { useDraggable } from "@dnd-kit/core"
 import {
   CalendarDays,

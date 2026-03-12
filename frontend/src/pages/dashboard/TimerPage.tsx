@@ -1,17 +1,20 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Trophy, RotateCcw, Play, SkipForward } from "lucide-react"
-
-type SessionType = "Focus" | "Short Break" | "Long Break"
+import { SessionStore } from "@/store/SessionStore"
+import type { SessionType } from "@/store/SessionStore"
 
 export default function TimerPage() {
   const navigate = useNavigate()
+  const { settings, getTodayStats } = SessionStore()
+  const stats = getTodayStats()
+  
   const [activeTab, setActiveTab] = useState<SessionType>("Focus")
 
   const minutesMap: Record<SessionType, number> = {
-    "Focus": 25,
-    "Short Break": 5,
-    "Long Break": 15,
+    "Focus": settings.focus / 60,
+    "Short Break": settings.shortBreak / 60,
+    "Long Break": settings.longBreak / 60,
   }
 
   const selectedMinutes = minutesMap[activeTab]
@@ -111,7 +114,7 @@ export default function TimerPage() {
             Today's Focus
           </p>
           <p className="text-2xl font-bold">
-            4.2 <span className="text-sm font-normal text-muted-foreground">hrs</span>
+            {stats.focusHours} <span className="text-sm font-normal text-muted-foreground">hrs</span>
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm ring-2 ring-primary/20">
@@ -119,14 +122,14 @@ export default function TimerPage() {
             Current Streak
           </p>
           <p className="text-2xl font-bold">
-            5 <span className="text-sm font-normal text-muted-foreground">sessions</span>
+            {stats.streak} <span className="text-sm font-normal text-muted-foreground">sessions</span>
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
           <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Daily Rank
           </p>
-          <p className="text-2xl font-bold">#12</p>
+          <p className="text-2xl font-bold">#{stats.rank}</p>
         </div>
       </div>
     </div>
