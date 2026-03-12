@@ -1,40 +1,47 @@
-import { useState, useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAppStore } from "@/store/useAppStore"
+import { SessionStore, type SessionType } from "@/store/SessionStore"
 import { Settings, Pause, Play } from "lucide-react"
 
 export default function FocusModePage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { addFocusSession } = useAppStore()
+  
+  const activeSessionId = SessionStore((state) => state.activeSessionId)
+  const history = SessionStore((state) => state.history)
+  const isPaused = SessionStore((state) => state.isPaused)
+  const setPaused = SessionStore((state) => state.setPaused)
+  const startSession = SessionStore((state) => state.startSession)
+  const setActiveSession = SessionStore((state) => state.setActiveSession)
+  const resetActiveSession = SessionStore((state) => state.resetActiveSession)
 
   // Extract initialization settings from URL
-  const initialMinutes = parseInt(searchParams.get("minutes") || "25", 10)
-  const sessionType = searchParams.get("type") || "Focus"
+  const initialMinutes = useMemo(() => parseInt(searchParams.get("minutes") || "25", 10), [searchParams])
+  const sessionType = useMemo(() => (searchParams.get("type") || "Focus") as SessionType, [searchParams])
 
-  const [timeLeft, setTimeLeft] = useState(initialMinutes * 60)
-  const [isPaused, setIsPaused] = useState(false)
+  const activeSession = history.find(s => s.id === activeSessionId)
+
+  // Initialize session if not present
+  useEffect(() => {
+    if (!activeSessionId) {
+      const id = startSession(sessionType, initialMinutes * 60)
+      setActiveSession(id)
+    }
+  }, [activeSessionId, startSession, setActiveSession, sessionType, initialMinutes])
+
+  const timeLeft = activeSession ? activeSession.duration - activeSession.elapsedTime : initialMinutes * 60
 
   // Derive minutes and seconds safely
-  const m = Math.floor(timeLeft / 60)
-  const s = timeLeft % 60
+  const m = Math.floor(Math.max(0, timeLeft) / 60)
+  const s = Math.max(0, timeLeft) % 60
 
   useEffect(() => {
-    if (isPaused || timeLeft <= 0) return
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          handleSessionComplete()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [isPaused, timeLeft])
+    if (activeSession && activeSession.status === "complete") {
+      handleSessionComplete()
+    }
+  }, [activeSession?.status])
 
   const handleSessionComplete = () => {
     // Only award stats if it was a deep focus session
@@ -42,11 +49,13 @@ export default function FocusModePage() {
       const hours = initialMinutes / 60
       addFocusSession(hours)
     }
+    resetActiveSession()
     // Return to the dashboard timer
     navigate("/timer")
   }
 
   const handleEndEarly = () => {
+    resetActiveSession()
     navigate("/timer")
   }
 
@@ -118,7 +127,7 @@ export default function FocusModePage() {
         {/* Minimal Interaction Controls */}
         <div className="mt-20 flex w-full max-w-xs flex-col items-center gap-6">
           <button
-            onClick={() => setIsPaused(!isPaused)}
+            onClick={() => setPaused(!isPaused)}
             className="group flex w-full items-center justify-center gap-3 rounded-xl bg-primary py-4 text-lg font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95"
           >
             {isPaused ? <Play className="h-6 w-6" /> : <Pause className="h-6 w-6 fill-current" />}

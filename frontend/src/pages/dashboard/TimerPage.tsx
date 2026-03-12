@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Trophy, RotateCcw, Play, SkipForward } from "lucide-react"
 import { SessionStore } from "@/store/SessionStore"
@@ -6,10 +6,25 @@ import type { SessionType } from "@/store/SessionStore"
 
 export default function TimerPage() {
   const navigate = useNavigate()
-  const { settings, getTodayStats } = SessionStore()
+  
+  // Use selectors for performance and safety
+  const settings = SessionStore((state) => state.settings)
+  const activeSessionId = SessionStore((state) => state.activeSessionId)
+  const history = SessionStore((state) => state.history)
+  const getTodayStats = SessionStore((state) => state.getTodayStats)
+  const resetActiveSession = SessionStore((state) => state.resetActiveSession)
+
   const stats = getTodayStats()
+  const activeSession = history.find(s => s.id === activeSessionId)
   
   const [activeTab, setActiveTab] = useState<SessionType>("Focus")
+
+  // Sync activeTab with activeSession if it exists
+  useEffect(() => {
+    if (activeSession) {
+      setActiveTab(activeSession.type)
+    }
+  }, [activeSession?.type])
 
   const minutesMap: Record<SessionType, number> = {
     "Focus": settings.focus / 60,
@@ -17,17 +32,32 @@ export default function TimerPage() {
     "Long Break": settings.longBreak / 60,
   }
 
-  const selectedMinutes = minutesMap[activeTab]
+  const selectedMinutes = activeSession 
+    ? Math.floor(Math.max(0, activeSession.duration - activeSession.elapsedTime) / 60)
+    : minutesMap[activeTab]
+    
+  const selectedSeconds = activeSession
+    ? Math.max(0, activeSession.duration - activeSession.elapsedTime) % 60
+    : 0
 
-  const handleStart = () => {
-    // Navigate to focus mode page, passing the configured time
-    navigate(`/focus?minutes=${selectedMinutes}&type=${activeTab}`)
+  const progress = activeSession 
+    ? (activeSession.elapsedTime / activeSession.duration) * 100 
+    : 0
+
+  const handleStartValue = () => {
+    if (activeSession) {
+      // Continue existing session
+      navigate(`/focus?minutes=${activeSession.duration / 60}&type=${activeSession.type}`)
+    } else {
+      // Start new session
+      navigate(`/focus?minutes=${minutesMap[activeTab]}&type=${activeTab}`)
+    }
   }
 
   return (
     <div className="flex flex-col items-center justify-center mx-auto w-full max-w-4xl px-6 py-12">
       {/* Session Type Selector */}
-      <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-12 w-fit mx-auto shadow-sm">
+      <div className={`flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-12 w-fit mx-auto shadow-sm transition-opacity ${activeSessionId ? "opacity-50 pointer-events-none" : ""}`}>
         {(["Focus", "Short Break", "Long Break"] as SessionType[]).map((tab) => (
           <button
             key={tab}
@@ -59,23 +89,23 @@ export default function TimerPage() {
             />
             {/* Base state without animation since it's idle */}
             <circle
-              className="text-primary rounded-full transition-all duration-500"
+              className="text-primary rounded-full transition-all duration-300"
               cx="200"
               cy="200"
               fill="transparent"
               r="190"
               stroke="currentColor"
               strokeDasharray="1194"
-              strokeDashoffset="0"
+              strokeDashoffset={1194 - (1194 * progress) / 100}
               strokeWidth="8"
             />
           </svg>
           <div className="text-center z-10">
             <h1 className="text-9xl font-bold tracking-tighter text-slate-900 dark:text-white tabular-nums">
-              {String(selectedMinutes).padStart(2, "0")}:00
+              {String(selectedMinutes).padStart(2, "0")}:{String(selectedSeconds).padStart(2, "0")}
             </h1>
             <p className="text-slate-500 font-medium uppercase tracking-[0.2em] mt-2">
-              Minutes Remaining
+              {activeSession ? "In Progress..." : "Minutes Remaining"}
             </p>
           </div>
         </div>
@@ -92,17 +122,24 @@ export default function TimerPage() {
 
       {/* Control Buttons */}
       <div className="mt-12 flex items-center gap-6">
-        <button className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-all hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+        <button 
+          onClick={resetActiveSession}
+          disabled={!activeSessionId}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-all hover:bg-slate-300 disabled:opacity-30 disabled:cursor-not-allowed dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+        >
           <RotateCcw className="h-6 w-6" />
         </button>
         <button
-          onClick={handleStart}
+          onClick={handleStartValue}
           className="flex h-20 items-center gap-3 rounded-3xl bg-primary px-12 text-2xl font-bold text-white shadow-lg shadow-primary/30 transition-all hover:scale-105 active:scale-95"
         >
           <Play className="h-8 w-8 fill-current" />
-          Start
+          {activeSession ? "Continue" : "Start"}
         </button>
-        <button className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-all hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+        <button 
+          disabled={!activeSessionId}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-all hover:bg-slate-300 disabled:opacity-30 disabled:cursor-not-allowed dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+        >
           <SkipForward className="h-6 w-6" />
         </button>
       </div>

@@ -1,5 +1,7 @@
+import { useEffect } from "react"
 import { Routes, Route } from "react-router-dom"
 import LandingPage from "@/pages/LandingPage"
+import { SessionStore } from "@/store/SessionStore"
 import AuthPage from "@/pages/AuthPage"
 
 import DashboardLayout from "@/pages/dashboard/index"
@@ -11,6 +13,19 @@ import AnalyticsPage from "@/pages/dashboard/AnalyticsPage"
 import SettingsPage from "@/pages/dashboard/SettingsPage"
 
 export function App() {
+  const tick = SessionStore((state) => state.tick)
+  const activeSessionId = SessionStore((state) => state.activeSessionId)
+
+  useEffect(() => {
+    if (!activeSessionId) return
+
+    const timer = setInterval(() => {
+      tick()
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [activeSessionId, tick])
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />

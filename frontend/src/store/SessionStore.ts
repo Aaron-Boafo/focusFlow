@@ -22,6 +22,8 @@ interface ISessionStore {
   }
 
   history: Session[]
+  activeSessionId: string | null
+  isPaused: boolean
 
   // Actions
   startSession: (type: SessionType, duration: number) => string
@@ -29,6 +31,11 @@ interface ISessionStore {
   completeSession: (id: string) => void
   endSession: (id: string) => void
   updateSettings: (settings: Partial<ISessionStore["settings"]>) => void
+  
+  setActiveSession: (id: string | null) => void
+  setPaused: (paused: boolean) => void
+  tick: () => void
+  resetActiveSession: () => void
   getTodayStats: () => {
     focusHours: number
     streak: number
@@ -45,6 +52,8 @@ export const SessionStore = create<ISessionStore>()(
         longBreak: 15 * 60,
       },
       history: [],
+      activeSessionId: null,
+      isPaused: false,
 
       startSession: (type, duration) => {
         const id = Math.random().toString(36).substring(2, 9)
@@ -90,6 +99,36 @@ export const SessionStore = create<ISessionStore>()(
           settings: { ...state.settings, ...newSettings },
         }))
       },
+
+      setActiveSession: (id) => set({ activeSessionId: id }),
+      
+      setPaused: (paused) => set({ isPaused: paused }),
+
+      tick: () => {
+        const { activeSessionId, isPaused, history } = get()
+        if (!activeSessionId || isPaused) return
+
+        const session = history.find(s => s.id === activeSessionId)
+        if (!session || session.status !== "progress") return
+
+        const newElapsedTime = session.elapsedTime + 1
+        const isComplete = newElapsedTime >= session.duration
+
+        set((state) => ({
+          history: state.history.map((s) =>
+            s.id === activeSessionId
+              ? { 
+                  ...s, 
+                  elapsedTime: newElapsedTime, 
+                  status: isComplete ? "complete" : "progress" 
+                }
+              : s
+          ),
+          activeSessionId: isComplete ? null : state.activeSessionId
+        }))
+      },
+
+      resetActiveSession: () => set({ activeSessionId: null, isPaused: false }),
 
       getTodayStats: () => {
         const today = new Date().toISOString().split("T")[0]
