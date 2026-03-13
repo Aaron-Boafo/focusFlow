@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { Timer, Settings2, Moon, Sun, User, Edit2 } from "lucide-react"
 import { useAppStore } from "@/store/useAppStore"
 import { SessionStore } from "@/store/SessionStore"
+import { toast } from "sonner"
+import { useTheme } from "@/components/theme-provider"
 
 export default function SettingsPage() {
   const { user } = useAppStore()
@@ -18,17 +20,22 @@ export default function SettingsPage() {
     settings.longBreak / 60
   )
 
-  const [desktopEnabled, setDesktopEnabled] = useState(true)
-  const [autoBreakEnabled, setAutoBreakEnabled] = useState(false)
-  const [themeMode, setThemeMode] = useState<"light" | "dark">("light")
+  const [desktopEnabled, setDesktopEnabled] = useState(
+    settings.desktopNotifications ?? true
+  )
+  const [autoBreakEnabled, setAutoBreakEnabled] = useState(
+    settings.autoStartBreaks ?? false
+  )
   
-  const [isSaved, setIsSaved] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   // Sync local state when settings change (e.g. from storage load)
   useEffect(() => {
     setPomodoroLength(settings.focus / 60)
     setShortBreakLength(settings.shortBreak / 60)
     setLongBreakLength(settings.longBreak / 60)
+    setDesktopEnabled(settings.desktopNotifications ?? true)
+    setAutoBreakEnabled(settings.autoStartBreaks ?? false)
   }, [settings])
 
   const handleSave = () => {
@@ -36,16 +43,26 @@ export default function SettingsPage() {
       focus: pomodoroLength * 60,
       shortBreak: shortBreakLength * 60,
       longBreak: longBreakLength * 60,
+      desktopNotifications: desktopEnabled,
+      autoStartBreaks: autoBreakEnabled,
     })
-    setIsSaved(true)
-    setTimeout(() => setIsSaved(false), 3000)
+    toast("Settings updated successfully!")
   }
 
   const handleDiscard = () => {
     setPomodoroLength(settings.focus / 60)
     setShortBreakLength(settings.shortBreak / 60)
     setLongBreakLength(settings.longBreak / 60)
-    setIsSaved(false)
+    setDesktopEnabled(settings.desktopNotifications ?? true)
+    setAutoBreakEnabled(settings.autoStartBreaks ?? false)
+  }
+
+  const handleToggleDesktop = () => {
+    const nextState = !desktopEnabled
+    setDesktopEnabled(nextState)
+    if (nextState && "Notification" in window) {
+      Notification.requestPermission()
+    }
   }
 
   return (
@@ -189,7 +206,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   className="peer sr-only"
                   checked={desktopEnabled}
-                  onChange={() => setDesktopEnabled(!desktopEnabled)}
+                  onChange={handleToggleDesktop}
                 />
                 <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-slate-700"></div>
               </label>
@@ -207,9 +224,9 @@ export default function SettingsPage() {
               </div>
               <div className="flex items-center rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
                 <button
-                  onClick={() => setThemeMode("light")}
+                  onClick={() => setTheme("light")}
                   className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-all ${
-                    themeMode === "light"
+                    theme === "light"
                       ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
                       : "text-slate-500 hover:text-primary dark:text-slate-400"
                   }`}
@@ -218,9 +235,9 @@ export default function SettingsPage() {
                   Light
                 </button>
                 <button
-                  onClick={() => setThemeMode("dark")}
+                  onClick={() => setTheme("dark")}
                   className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-all ${
-                    themeMode === "dark"
+                    theme === "dark"
                       ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
                       : "text-slate-500 hover:text-primary dark:text-slate-400"
                   }`}
@@ -289,11 +306,6 @@ export default function SettingsPage() {
 
         {/* Save Changes Floating Footer */}
         <div className="flex items-center justify-end gap-4 pt-4">
-          {isSaved && (
-            <span className="text-sm font-medium text-emerald-600 animate-in fade-in slide-in-from-right-2">
-              Changes saved successfully!
-            </span>
-          )}
           <div className="flex items-center gap-3">
             <button
               onClick={handleDiscard}

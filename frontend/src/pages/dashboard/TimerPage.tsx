@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Trophy, RotateCcw, Play, SkipForward } from "lucide-react"
+import { Trophy, RotateCcw, Play, SkipForward, Pause } from "lucide-react"
 import { SessionStore } from "@/store/SessionStore"
 import type { SessionType } from "@/store/SessionStore"
 
@@ -11,8 +11,11 @@ export default function TimerPage() {
   const settings = SessionStore((state) => state.settings)
   const activeSessionId = SessionStore((state) => state.activeSessionId)
   const history = SessionStore((state) => state.history)
+  const isPaused = SessionStore((state) => state.isPaused)
+  const setPaused = SessionStore((state) => state.setPaused)
   const getTodayStats = SessionStore((state) => state.getTodayStats)
   const resetActiveSession = SessionStore((state) => state.resetActiveSession)
+  const endSession = SessionStore((state) => state.endSession)
 
   const stats = getTodayStats()
   const activeSession = history.find(s => s.id === activeSessionId)
@@ -45,27 +48,38 @@ export default function TimerPage() {
     : 0
 
   const handleStartValue = () => {
-    if (activeSession) {
+    if (activeSession && activeSession.status === "progress") {
       // Continue existing session
       navigate(`/focus?minutes=${activeSession.duration / 60}&type=${activeSession.type}`)
     } else {
-      // Start new session
+      // Clear old state and start new session
+      if (activeSession) resetActiveSession()
       navigate(`/focus?minutes=${minutesMap[activeTab]}&type=${activeTab}`)
+    }
+  }
+
+  const handleReset = () => {
+    if (activeSession && (activeSession.status === "complete" || activeSession.status === "ended")) {
+      resetActiveSession()
+    } else if (activeSessionId) {
+      endSession(activeSessionId)
+    } else {
+      resetActiveSession()
     }
   }
 
   return (
     <div className="flex flex-col items-center justify-center mx-auto w-full max-w-4xl px-6 py-12">
       {/* Session Type Selector */}
-      <div className={`flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-12 w-fit mx-auto shadow-sm transition-opacity ${activeSessionId ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-12 w-fit mx-auto shadow-sm transition-opacity ${activeSession && activeSession.status === "progress" ? "opacity-50 pointer-events-none" : ""}`}>
         {(["Focus", "Short Break", "Long Break"] as SessionType[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-8 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeTab === tab
-                ? "bg-white dark:bg-slate-700 text-primary shadow-sm"
-                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                ? "bg-white dark:bg-slate-700 text-primary shadow-sm "
+                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 "
             }`}
           >
             {tab}
@@ -105,7 +119,7 @@ export default function TimerPage() {
               {String(selectedMinutes).padStart(2, "0")}:{String(selectedSeconds).padStart(2, "0")}
             </h1>
             <p className="text-slate-500 font-medium uppercase tracking-[0.2em] mt-2">
-              {activeSession ? "In Progress..." : "Minutes Remaining"}
+              {activeSession && activeSession.status === "progress" ? "In Progress..." : activeSession && activeSession.status !== "progress" ? "Session Finished" : "Minutes Remaining"}
             </p>
           </div>
         </div>
@@ -123,7 +137,7 @@ export default function TimerPage() {
       {/* Control Buttons */}
       <div className="mt-12 flex items-center gap-6">
         <button 
-          onClick={resetActiveSession}
+          onClick={handleReset}
           disabled={!activeSessionId}
           className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-all hover:bg-slate-300 disabled:opacity-30 disabled:cursor-not-allowed dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
         >
@@ -134,13 +148,18 @@ export default function TimerPage() {
           className="flex h-20 items-center gap-3 rounded-3xl bg-primary px-12 text-2xl font-bold text-white shadow-lg shadow-primary/30 transition-all hover:scale-105 active:scale-95"
         >
           <Play className="h-8 w-8 fill-current" />
-          {activeSession ? "Continue" : "Start"}
+          {activeSession && activeSession.status === "progress" ? "Continue" : "Start"}
         </button>
         <button 
+          onClick={() => setPaused(!isPaused)}
           disabled={!activeSessionId}
           className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-all hover:bg-slate-300 disabled:opacity-30 disabled:cursor-not-allowed dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
         >
-          <SkipForward className="h-6 w-6" />
+          {activeSessionId ? (
+            isPaused ? <Play className="h-6 w-6 fill-current" /> : <Pause className="h-6 w-6 fill-current" />
+          ) : (
+            <SkipForward className="h-6 w-6" />
+          )}
         </button>
       </div>
 

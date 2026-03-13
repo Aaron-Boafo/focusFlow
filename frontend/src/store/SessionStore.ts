@@ -12,6 +12,7 @@ export interface Session {
   elapsedTime: number // actual worked in seconds
   status: SessionStatus
   date: string // YYYY-MM-DD for grouping
+  exp?: number
 }
 
 interface ISessionStore {
@@ -19,6 +20,8 @@ interface ISessionStore {
     focus: number
     shortBreak: number
     longBreak: number
+    desktopNotifications: boolean
+    autoStartBreaks: boolean
   }
 
   history: Session[]
@@ -31,7 +34,7 @@ interface ISessionStore {
   completeSession: (id: string) => void
   endSession: (id: string) => void
   updateSettings: (settings: Partial<ISessionStore["settings"]>) => void
-  
+
   setActiveSession: (id: string | null) => void
   setPaused: (paused: boolean) => void
   tick: () => void
@@ -50,13 +53,15 @@ export const SessionStore = create<ISessionStore>()(
         focus: 25 * 60,
         shortBreak: 5 * 60,
         longBreak: 15 * 60,
+        desktopNotifications: true,
+        autoStartBreaks: false,
       },
       history: [],
       activeSessionId: null,
       isPaused: false,
 
       startSession: (type, duration) => {
-        const id = Math.random().toString(36).substring(2, 9)
+        const id = crypto.randomUUID()
         const newSession: Session = {
           id,
           type,
@@ -83,6 +88,7 @@ export const SessionStore = create<ISessionStore>()(
           history: state.history.map((s) =>
             s.id === id ? { ...s, status: "complete", elapsedTime: s.duration } : s
           ),
+          isPaused: false,
         }))
       },
 
@@ -91,6 +97,7 @@ export const SessionStore = create<ISessionStore>()(
           history: state.history.map((s) =>
             s.id === id ? { ...s, status: "ended" } : s
           ),
+          isPaused: false,
         }))
       },
 
@@ -101,11 +108,11 @@ export const SessionStore = create<ISessionStore>()(
       },
 
       setActiveSession: (id) => set({ activeSessionId: id }),
-      
+
       setPaused: (paused) => set({ isPaused: paused }),
 
       tick: () => {
-        const { activeSessionId, isPaused, history } = get()
+        const { activeSessionId, isPaused, history, settings } = get()
         if (!activeSessionId || isPaused) return
 
         const session = history.find(s => s.id === activeSessionId)
@@ -117,15 +124,50 @@ export const SessionStore = create<ISessionStore>()(
         set((state) => ({
           history: state.history.map((s) =>
             s.id === activeSessionId
-              ? { 
-                  ...s, 
-                  elapsedTime: newElapsedTime, 
-                  status: isComplete ? "complete" : "progress" 
-                }
+              ? {
+                ...s,
+                elapsedTime: newElapsedTime,
+                status: isComplete ? "complete" : "progress"
+              }
               : s
           ),
-          activeSessionId: isComplete ? null : state.activeSessionId
         }))
+
+        // Handle Completion Side Effects
+        if (isComplete) {
+          // 0. Award XP
+          const xpEarned = Math.floor(session.duration / 60) // 1 XP per minute focused
+          
+          set((state) => ({
+            history: state.history.map((s) =>
+              s.id === activeSessionId ? { ...s, exp: xpEarned } : s
+            )
+          }))
+          
+          import('./ExpStore').then(module => {
+            module.useExpStore.getState().addExp(xpEarned)
+          })
+
+          // 1. Desktop Notifications
+          if (settings.desktopNotifications && "Notification" in window) {
+            if (Notification.permission === "granted") {
+              const emoji = session.type === "Focus" ? "🎯" : "☕"
+              new Notification(`Session Complete! ${emoji}`, {
+                body: `Your ${session.type} session has finished.`,
+                icon: "/favicon.ico",
+              })
+            }
+          }
+
+          // 2. Auto-start Breaks
+          if (settings.autoStartBreaks && session.type === "Focus") {
+            // Give a tiny delay so the UI can process the 'complete' state before switching
+            setTimeout(() => {
+              const newId = get().startSession("Short Break", settings.shortBreak)
+              get().setActiveSession(newId)
+            }, 1000)
+          }
+        }
       },
 
       resetActiveSession: () => set({ activeSessionId: null, isPaused: false }),

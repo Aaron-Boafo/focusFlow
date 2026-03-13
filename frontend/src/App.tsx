@@ -11,6 +11,7 @@ import TimerPage from "@/pages/dashboard/TimerPage"
 import FocusModePage from "@/pages/dashboard/FocusModePage"
 import AnalyticsPage from "@/pages/dashboard/AnalyticsPage"
 import SettingsPage from "@/pages/dashboard/SettingsPage"
+import { Toaster } from "@/components/ui/sonner"
 
 export function App() {
   const tick = SessionStore((state) => state.tick)
@@ -27,22 +28,25 @@ export function App() {
   }, [activeSessionId, tick])
 
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/auth" element={<AuthPage />} />
-      
-      {/* Dashboard Routes wrapped in the persistent Layout */}
-      <Route element={<DashboardLayout />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/tasks/*" element={<TaskBoardPage />} />
-        <Route path="/timer" element={<TimerPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-      </Route>
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        
+        {/* Dashboard Routes wrapped in the persistent Layout */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/tasks/*" element={<TaskBoardPage />} />
+          <Route path="/timer" element={<TimerPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
 
-      {/* Focus Mode operates uniquely without the Sidebar */}
-      <Route path="/focus" element={<FocusModePage />} />
-    </Routes>
+        {/* Focus Mode operates uniquely without the Sidebar */}
+        <Route path="/focus" element={<FocusModePage />} />
+      </Routes>
+      <Toaster />
+    </>
   )
 }
 
