@@ -1,44 +1,59 @@
 import { Button } from "@/components/ui/button"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useAppStore } from "@/store/useAppStore"
 import { useProjectStore } from "@/store/ProjectStore"
 import { useExpStore } from "@/store/ExpStore"
 import { SessionStore } from "@/store/SessionStore"
 import { WeeklyProductivityChart } from "@/components/dashboard/WeeklyProductivityChart"
-import {
-  Play,
-  CheckCircle2,
-  Timer,
-  Clock,
-  Medal,
-  Check,
-} from "lucide-react"
+import { Play, CheckCircle2, Timer, Clock, Medal, Layers } from "lucide-react"
+import DynamicIcon from "@/components/ui/DynamicIcon"
 
 export default function OverviewPage() {
   const navigate = useNavigate()
-  const { user, nextTasks, completeTask } = useAppStore()
+  const { user } = useAppStore()
   const { projects } = useProjectStore()
-  const { level, getExpForNextLevel, getExpSinceLastLevel, getXpTitle } = useExpStore()
+
+  const upcomingProjects = projects
+    .filter((p) => p.status !== "Completed")
+    .slice(0, 3)
+  const {
+    level,
+    getExpForNextLevel,
+    getExpSinceLastLevel,
+    getXpTitle,
+    streak,
+    getWeeklyStatus,
+  } = useExpStore()
   const { getTodayStats } = SessionStore()
   const sessionStats = getTodayStats()
+  const weeklyStatus = getWeeklyStatus()
 
   // Calculate live task stats from ProjectStore
-  const allTasks = projects.flatMap(p => p.tasks)
-  const tasksCompletedToday = allTasks.filter(t => t.status === "Done").length
+  const allTasks = projects.flatMap((p) => p.tasks)
+  const tasksCompletedToday = allTasks.filter((t) => t.status === "Done").length
   const totalTasksToday = allTasks.length
-  
+
   // Calculate Task Growth (Live)
   const today = new Date().toISOString().split("T")[0]
   const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0]
-  const completedTodayCount = allTasks.filter(t => t.status === "Done" && t.completedAt?.startsWith(today)).length
-  const completedYesterdayCount = allTasks.filter(t => t.status === "Done" && t.completedAt?.startsWith(yesterday)).length
-  
+  const completedTodayCount = allTasks.filter(
+    (t) => t.status === "Done" && t.completedAt?.startsWith(today)
+  ).length
+  const completedYesterdayCount = allTasks.filter(
+    (t) => t.status === "Done" && t.completedAt?.startsWith(yesterday)
+  ).length
+
   const tasksGrowth = (() => {
-    if (completedYesterdayCount === 0) return completedTodayCount > 0 ? "+100%" : "0%"
-    const growth = Math.round(((completedTodayCount - completedYesterdayCount) / completedYesterdayCount) * 100)
+    if (completedYesterdayCount === 0)
+      return completedTodayCount > 0 ? "+100%" : "0%"
+    const growth = Math.round(
+      ((completedTodayCount - completedYesterdayCount) /
+        completedYesterdayCount) *
+        100
+    )
     return (growth >= 0 ? "+" : "") + growth + "%"
   })()
-  
+
   // Calculate XP progress
   const expInLevel = getExpSinceLastLevel()
   const expForNext = getExpForNextLevel(level)
@@ -105,9 +120,10 @@ export default function OverviewPage() {
               <p className="text-sm font-medium text-muted-foreground">
                 Focus Sessions (Today)
               </p>
-              <p className="mt-1 text-3xl font-bold">{sessionStats?.streak || 0}</p>
+              <p className="mt-1 text-3xl font-bold">
+                {sessionStats?.streak || 0}
+              </p>
             </div>
-
 
             {/* Hours Stats */}
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -160,50 +176,68 @@ export default function OverviewPage() {
             </div>
           </div>
 
-          {/* Daily Tasks Quick View */}
+          {/* Upcoming Projects Quick View */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
-              <h4 className="font-bold">Next Tasks</h4>
-              <a
-                href="#"
+              <h4 className="font-bold">Active Projects</h4>
+              <Link
+                to="/tasks"
                 className="text-xs font-bold text-primary hover:underline"
               >
                 View All
-              </a>
+              </Link>
             </div>
             <div className="space-y-4">
-              {nextTasks.map((task: any) => (
-                <div key={task.id} className="group flex items-center gap-4">
-                  <button
-                    onClick={() => completeTask(task.id)}
-                    disabled={task.completed}
-                    className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-colors ${
-                      task.completed
-                        ? "border-primary bg-primary"
-                        : "border-border hover:border-primary"
-                    }`}
+              {upcomingProjects.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                  <Layers className="h-8 w-8 text-muted-foreground/30" />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    No active projects
+                  </p>
+                  <Link
+                    to="/tasks"
+                    className="text-xs text-primary hover:underline"
                   >
-                    <Check
-                      className={`h-4 w-4 text-white ${
-                        task.completed
-                          ? "block"
-                          : "hidden group-hover:block group-hover:text-primary"
-                      }`}
-                    />
-                  </button>
-                  <div
-                    className={`flex-1 ${task.completed ? "line-through opacity-50" : ""}`}
-                  >
-                    <p className="text-sm font-semibold">{task.title}</p>
-                    <p className="text-[10px] tracking-wider text-muted-foreground uppercase">
-                      {task.category}
-                    </p>
-                  </div>
-                  <span className="rounded bg-muted px-2 py-1 text-[10px] text-muted-foreground">
-                    {task.time}
-                  </span>
+                    Create your first project
+                  </Link>
                 </div>
-              ))}
+              ) : (
+                upcomingProjects.map((project) => (
+                  <Link
+                    key={project.id}
+                    to={`/tasks/${project.id}`}
+                    className="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-muted/60"
+                  >
+                    {/* Icon */}
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${project.iconBg} ${project.iconColor}`}
+                    >
+                      <DynamicIcon name={project.icon} size={18} />
+                    </div>
+                    {/* Details */}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">
+                        {project.title}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary transition-all"
+                            style={{ width: `${project.progress}%` }}
+                          />
+                        </div>
+                        <span className="shrink-0 text-[10px] font-bold text-muted-foreground">
+                          {project.progress}%
+                        </span>
+                      </div>
+                    </div>
+                    {/* Tasks left badge */}
+                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                      {project.tasksLeft} left
+                    </span>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
 
@@ -213,21 +247,28 @@ export default function OverviewPage() {
             <div className="relative z-10">
               <h5 className="mb-2 font-bold text-white">Daily Streak! 🔥</h5>
               <p className="mb-4 text-sm text-slate-400">
-                You've hit your focus goal for {sessionStats?.totalStreakDays || 0} days in a row.
+                You've hit your daily goal for {streak} days in a row.
               </p>
               <div className="flex gap-2">
-                {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                      idx < (sessionStats?.totalStreakDays || 0)
-                        ? "bg-primary text-white"
-                        : "bg-slate-700 text-slate-500"
-                    }`}
-                  >
-                    {day}
-                  </div>
-                ))}
+                {weeklyStatus.map((completed, idx) => {
+                  const d = new Date()
+                  d.setDate(d.getDate() - (6 - idx))
+                  const dayLabel = d.toLocaleDateString("en-US", {
+                    weekday: "narrow",
+                  })
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                        completed
+                          ? "bg-primary text-white"
+                          : "bg-slate-700 text-slate-500"
+                      }`}
+                    >
+                      {dayLabel}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
