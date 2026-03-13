@@ -1,4 +1,4 @@
-import type { KanbanTask } from "@/store/useAppStore"
+import type { KanbanTask } from "@/types"
 import { KanbanCard } from "./KanbanCard"
 import { useDroppable } from "@dnd-kit/core"
 import { MoreHorizontal } from "lucide-react"

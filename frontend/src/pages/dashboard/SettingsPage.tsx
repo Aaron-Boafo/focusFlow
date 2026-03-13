@@ -17,19 +17,24 @@ import {
 import { Input } from "@/components/ui/input"
 import { accountUpdateSchema } from "@/lib/schemas"
 import { SettingsSkeleton } from "@/components/skeletons/SettingsSkeleton"
+import { useAuth } from "@/context/AuthContext"
 
 export default function SettingsPage() {
+  const { user: authUser, isAuthenticated } = useAuth()
   const { user, updateUser, isLoading: appLoading } = useAppStore()
   const { isLoading: sessionLoading } = SessionStore()
 
   if (appLoading || sessionLoading) return <SettingsSkeleton />
   
+  const displayName = isAuthenticated ? (authUser?.name || "User") : "Guest"
+  
   // Account modal state
-  const [userName, setUserName] = useState(user.name)
+  const [userName, setUserName] = useState(displayName)
   const [userPassword, setUserPassword] = useState(user.password || "")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const getInitials = (name: string) => {
+    if (!name) return "GS"
     return name
       .split(" ")
       .map((n) => n[0])
@@ -329,7 +334,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-4">
               <div className="group relative">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-primary/10 text-xl font-bold text-primary dark:border-slate-700">
-                  {getInitials(user.name)}
+                  {getInitials(isAuthenticated ? (authUser?.name || "User") : "Guest")}
                 </div>
                 <button className="absolute right-0 bottom-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
                   <Edit2 className="h-3 w-3" />
@@ -337,16 +342,19 @@ export default function SettingsPage() {
               </div>
               <div className="flex-1">
                 <p className="font-bold text-slate-900 dark:text-white">
-                  {user.name}
+                  {displayName}
                 </p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {user.name.toLowerCase().replace(/\s+/g, '')}@example.com
+                  {isAuthenticated ? authUser?.email : "guest@focusflow.demo"}
                 </p>
               </div>
               
               <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogTrigger asChild>
-                  <button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                  <button 
+                    disabled={!isAuthenticated}
+                    className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     Manage Account
                   </button>
                 </AlertDialogTrigger>

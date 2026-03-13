@@ -16,12 +16,13 @@ import {
   Timer,
   BarChart2,
   Settings,
-  HelpCircle,
   LogOut,
 } from "lucide-react"
 
+import { useAuth } from "@/context/AuthContext"
+
 export function AppSidebar() {
-  const { user } = useAppStore()
+  const { user: authUser, isAuthenticated } = useAuth()
   const location = useLocation()
 
   const isActive = (path: string) => location.pathname.startsWith(path)
@@ -34,7 +35,7 @@ export function AppSidebar() {
             FocusFlow
           </h1>
           <p className="text-xs font-medium text-muted-foreground">
-            {user.plan}
+            {isAuthenticated ? (authUser?.plan || "Pro Plan") : "Guest"}
           </p>
         </Link>
       </SidebarHeader>

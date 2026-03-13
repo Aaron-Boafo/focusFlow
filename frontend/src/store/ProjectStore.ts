@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { useExpStore } from "./ExpStore"
 import { createZustandStorage } from "@/services/storageService"
-import type { IProjectStore, Project, ProjectStatus, ProjectTask } from "@/types"
+import type { IProjectStore, Project } from "@/types"
 
 export const useProjectStore = create<IProjectStore>()(
   persist(

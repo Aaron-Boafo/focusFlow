@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAppStore } from "@/store/useAppStore"
-import { SessionStore, type SessionType } from "@/store/SessionStore"
+import { SessionStore } from "@/store/SessionStore"
+import type { SessionType } from "@/types"
 import { Settings, Pause, Play, AlertCircle, CheckCircle2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {

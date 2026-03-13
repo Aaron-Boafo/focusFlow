@@ -1,23 +1,10 @@
-import React from "react";
 
 // --- UI & Statistics ---
-export interface IFeatures {
-    icon: React.ReactNode;
-    title: string;
-    desc: string;
-}
-
 export interface IStatistics {
     label: string;
     value: string;
     growth: string;
     pct: string;
-}
-
-export interface ProductivityData {
-    day: string
-    hours: number
-    total: number
 }
 
 // --- Project Types ---
@@ -128,6 +115,7 @@ export interface AuthUser {
   email: string
   name: string
   avatar?: string
+  plan?: string
 }
 
 export interface IAuthStore {
@@ -138,6 +126,22 @@ export interface IAuthStore {
   signup: (name: string, email: string, pass: string) => Promise<void>
   logout: () => void
   skipToDemo: () => void
+}
+
+export interface AuthResponse {
+  user: AuthUser
+  //accessToken: string (handled by cookies)
+}
+
+export interface AuthContextType {
+  user: AuthUser | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  login: (email: string, pass: string) => Promise<void>
+  signup: (name: string, email: string, pass: string) => Promise<void>
+  logout: () => void
+  refresh: () => Promise<void>
+  fetchUser: () => Promise<void>
 }
 
 export interface AppState {
@@ -154,6 +158,7 @@ export interface AppState {
     
     // Actions
     updateUser: (data: Partial<AppState["user"]>) => void
+    addFocusSession: (hours: number) => void
 }
 
 // --- Storage Types ---
@@ -165,14 +170,6 @@ export interface StorageStrategy {
 }
 
 // --- Legacy/Common Types ---
-export type Task = {
-    id: string
-    title: string
-    category: string
-    time: string
-    completed: boolean
-}
-
 export type KanbanStatus = "todo" | "in-progress" | "done"
 
 export interface KanbanTask {

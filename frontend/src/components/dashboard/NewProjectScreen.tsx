@@ -1,10 +1,7 @@
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useState, useEffect } from "react"
-import {
-  useProjectStore,
-  type Project,
-  type ProjectTask,
-} from "@/store/ProjectStore"
+import { useProjectStore } from "@/store/ProjectStore"
+import type { Project, ProjectTask } from "@/types"
 import * as lucideIcons from "lucide-react"
 import { Info, CalendarDays, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"

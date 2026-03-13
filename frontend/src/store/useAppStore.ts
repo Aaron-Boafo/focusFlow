@@ -20,6 +20,11 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           user: { ...state.user, ...data },
         })),
+
+      addFocusSession: (hours) => {
+        // Implement logic to update user XP or stats
+        console.log(`Focus session completed: ${hours} hours`)
+      },
     }),
     {
       name: "focusflow-app-storage",
