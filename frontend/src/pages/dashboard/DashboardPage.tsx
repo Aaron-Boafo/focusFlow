@@ -4,6 +4,7 @@ import { useAppStore } from "@/store/useAppStore"
 import { useProjectStore } from "@/store/ProjectStore"
 import { useExpStore } from "@/store/ExpStore"
 import { SessionStore } from "@/store/SessionStore"
+import { useAuth } from "@/context/AuthContext"
 import { WeeklyProductivityChart } from "@/components/dashboard/WeeklyProductivityChart"
 import { Play, CheckCircle2, Timer, Clock, Medal, Layers } from "lucide-react"
 import DynamicIcon from "@/components/ui/DynamicIcon"
@@ -11,7 +12,8 @@ import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton"
 
 export default function OverviewPage() {
   const navigate = useNavigate()
-  const { user, isLoading: appLoading } = useAppStore()
+  const { user: authUser, isAuthenticated } = useAuth()
+  const { isLoading: appLoading } = useAppStore()
   const { projects, isLoading: projectsLoading } = useProjectStore()
   const { isLoading: expLoading } = useExpStore()
   const { isLoading: sessionLoading } = SessionStore()
@@ -72,7 +74,9 @@ export default function OverviewPage() {
       {/* Welcome & Quick Actions */}
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <h3 className="text-2xl font-bold">Good morning, {user.name}!</h3>
+          <h3 className="text-2xl font-bold">
+            Good morning, {isAuthenticated ? (authUser?.name || "User") : "Guest"}!
+          </h3>
           <p className="text-muted-foreground">
             Ready to crush your goals today?
           </p>
