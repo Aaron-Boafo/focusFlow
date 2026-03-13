@@ -8,6 +8,7 @@ export default function TaskBoardPage() {
     <Routes>
       <Route path="/" element={<ProjectsScreen />} />
       <Route path="/new" element={<NewProjectScreen />} />
+      <Route path="/edit/:projectId" element={<NewProjectScreen />} />
       <Route path="/:projectId" element={<BoardScreen />} />
     </Routes>
   )

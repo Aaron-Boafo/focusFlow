@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
-import { Search, Plus, Target } from "lucide-react"
+import { Search, Plus, Target, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAppStore } from "@/store/useAppStore"
+import { useProjectStore } from "@/store/ProjectStore"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,7 +12,7 @@ import {
 import * as lucideIcons from "lucide-react"
 
 export function ProjectsScreen() {
-  const { projects } = useAppStore()
+  const { projects } = useProjectStore()
 
   return (
     <div className="flex flex-col min-h-full">
@@ -57,7 +57,7 @@ export function ProjectsScreen() {
         {/* Tabs */}
         <div className="flex border-b border-border mb-8 gap-8 overflow-x-auto">
           <button className="pb-4 border-b-2 border-primary text-primary text-sm font-bold whitespace-nowrap">All Projects</button>
-          <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground text-sm font-medium transition-colors whitespace-nowrap">Active</button>
+          <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground text-sm font-medium transition-colors whitespace-nowrap">In Progress</button>
           <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground text-sm font-medium transition-colors whitespace-nowrap">Completed</button>
           <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground text-sm font-medium transition-colors whitespace-nowrap">Archived</button>
         </div>
@@ -70,10 +70,8 @@ export function ProjectsScreen() {
 
             // Generate status badge styling dynamically based on status text
             let statusBadge = "bg-slate-100 dark:bg-slate-800 text-slate-500"
-            if (project.status === "On Track") statusBadge = "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-            if (project.status === "At Risk") statusBadge = "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
-            if (project.status === "Planned") statusBadge = "bg-slate-100 dark:bg-slate-800 text-slate-500"
-            if (project.status === "Active") statusBadge = "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+            if (project.status === "In Progress") statusBadge = "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+            if (project.status === "Completed") statusBadge = "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
 
             return (
               <div key={project.id} className="bg-card border border-border rounded-xl p-6 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none transition-all flex flex-col">
@@ -81,7 +79,12 @@ export function ProjectsScreen() {
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${project.iconBg} ${project.iconColor}`}>
                     <Icon className="w-7 h-7" />
                   </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded ${statusBadge}`}>{project.status}</span>
+                  <div className="flex items-center gap-2">
+                    <Link to={`/tasks/edit/${project.id}`} className="p-1.5 text-muted-foreground hover:bg-muted rounded-md transition-all">
+                      <Edit className="w-4 h-4" />
+                    </Link>
+                    <span className={`text-xs font-bold px-2 py-1 rounded ${statusBadge}`}>{project.status}</span>
+                  </div>
                 </div>
                 <h4 className="text-lg font-bold mb-2">{project.title}</h4>
                 <p className="text-muted-foreground text-sm mb-6 line-clamp-2">{project.description}</p>
@@ -93,17 +96,7 @@ export function ProjectsScreen() {
                   <div className="w-full h-2 bg-muted rounded-full mb-6 relative">
                     <div className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${project.progress}%` }}></div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex -space-x-2">
-                      {project.contributors.slice(0, 3).map((_, i) => (
-                        <div key={i} className={`w-8 h-8 rounded-full border-2 border-background bg-slate-${200 + (i * 100)} dark:bg-slate-${700 - (i * 100)}`}></div>
-                      ))}
-                      {project.contributors.length > 3 && (
-                        <div className="w-8 h-8 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                          +{project.contributors.length - 3}
-                        </div>
-                      )}
-                    </div>
+                  <div className="flex items-center justify-end">
                     {project.tasksLeft > 0 && <span className="text-xs text-muted-foreground font-medium">{project.tasksLeft} tasks left</span>}
                   </div>
                   <Link to={`/tasks/${project.id}`}>

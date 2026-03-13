@@ -3,7 +3,6 @@ import { persist } from "zustand/middleware"
 import type { AppState } from "@/types"
 import {
   initialKanbanTasks,
-  initialProjects,
   initialTasks,
   initialProductivity,
 } from "@/constants"
@@ -32,7 +31,6 @@ export const useAppStore = create<AppState>()(
       productivityData: initialProductivity,
       nextTasks: initialTasks,
       kanbanTasks: initialKanbanTasks,
-      projects: initialProjects,
 
       completeTask: (taskId) =>
         set((state) => ({
@@ -67,11 +65,6 @@ export const useAppStore = create<AppState>()(
             ...state.kanbanTasks,
             { ...task, id: `k${Date.now()}` },
           ],
-        })),
-
-      addProject: (project) =>
-        set((state) => ({
-          projects: [...state.projects, { ...project, id: `p${Date.now()}` }],
         })),
     }),
     {
