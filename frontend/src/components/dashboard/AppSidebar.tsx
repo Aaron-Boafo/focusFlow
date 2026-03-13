@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom"
+import { useNavigate, Link, useLocation } from "react-router-dom"
 import {
   Sidebar,
   SidebarContent,
@@ -21,10 +21,16 @@ import {
 import { useAuth } from "@/context/AuthContext"
 
 export function AppSidebar() {
-  const { user: authUser, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const { user: authUser, isAuthenticated, logout } = useAuth()
   const location = useLocation()
 
   const isActive = (path: string) => location.pathname.startsWith(path)
+
+  const handleLogout = async () => {
+    await logout()
+    navigate("/auth")
+  }
 
   return (
     <Sidebar className="border-r border-border bg-card">
@@ -120,6 +126,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Logout"
+              onClick={handleLogout}
               className="gap-3 py-4 text-muted-foreground transition-colors hover:text-destructive"
             >
               <LogOut className="h-5 w-5" />

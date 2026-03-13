@@ -52,7 +52,7 @@ export function Navbar() {
             Login
           </Button>
         </Link>
-        <Link to="/auth">
+        <Link to="/auth?mode=signup">
           <Button size="sm" className="shadow-lg shadow-primary/20">
             Sign Up
           </Button>
@@ -93,21 +93,25 @@ export function Hero() {
             </p>
 
             <div className="flex flex-col gap-4 pt-4 sm:flex-row">
-              <Button
-                size="lg"
-                className="gap-2 px-8 py-6 text-base shadow-xl shadow-primary/30"
-              >
-                Signup
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="gap-2 bg-background/50 px-8 py-6 text-base backdrop-blur-sm"
-              >
-                Try Demo
-                <ChevronRight className="h-5 w-5" />
-              </Button>
+              <Link to="/auth?mode=signup">
+                <Button
+                  size="lg"
+                  className="gap-2 px-8 py-6 text-base shadow-xl shadow-primary/30"
+                >
+                  Signup
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/dashboard">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 bg-background/50 px-8 py-6 text-base backdrop-blur-sm"
+                >
+                  Try Demo
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -379,12 +383,14 @@ export function CTASection() {
           FocusFlow.
         </p>
         <div className="flex flex-col justify-center gap-4 pt-8 sm:flex-row">
-          <Button
-            size="lg"
-            className="bg-white px-10 py-6 text-lg font-bold text-slate-900 hover:bg-neutral-100"
-          >
-            Get Started Free
-          </Button>
+          <Link to="/auth?mode=signup">
+            <Button
+              size="lg"
+              className="bg-white px-10 py-6 text-lg font-bold text-slate-900 hover:bg-neutral-100"
+            >
+              Get Started Free
+            </Button>
+          </Link>
           <Button
             size="lg"
             variant="outline"

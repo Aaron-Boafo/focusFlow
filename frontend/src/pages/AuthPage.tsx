@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { Navbar } from "@/components/LandingSections"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAuthStore } from "@/store/AuthStore"
+import { useAuth } from "@/context/AuthContext"
 import { useAppStore } from "@/store/useAppStore"
 import { loginSchema, signupSchema } from "@/lib/schemas"
 import { toast } from "sonner"
@@ -25,8 +25,11 @@ import {
 
 export default function AuthPage() {
   const navigate = useNavigate()
-  const { login, signup, isLoading } = useAuthStore()
+  const [searchParams] = useSearchParams()
+  const { login, signup, isLoading } = useAuth()
   const { updateUser } = useAppStore()
+
+  const mode = searchParams.get("mode") || "login"
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("")
@@ -110,7 +113,7 @@ export default function AuthPage() {
 
       <main className="flex flex-1 items-center justify-center bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/10 via-background to-background p-6 dark:from-primary/5">
         <div className="w-full max-w-[480px]">
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs defaultValue={mode} className="w-full">
             {/* Tab Triggers */}
             <div className="mb-6 flex justify-center">
               <TabsList className="grid w-full max-w-[400px] grid-cols-2 rounded-xl p-1 shadow-sm">
