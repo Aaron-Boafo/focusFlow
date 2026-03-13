@@ -16,9 +16,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { accountUpdateSchema } from "@/lib/schemas"
+import { SettingsSkeleton } from "@/components/skeletons/SettingsSkeleton"
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAppStore()
+  const { user, updateUser, isLoading: appLoading } = useAppStore()
+  const { isLoading: sessionLoading } = SessionStore()
+
+  if (appLoading || sessionLoading) return <SettingsSkeleton />
   
   // Account modal state
   const [userName, setUserName] = useState(user.name)

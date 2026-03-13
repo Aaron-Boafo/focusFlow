@@ -8,6 +8,7 @@ export const useProjectStore = create<IProjectStore>()(
   persist(
     (set) => ({
       projects: [],
+      isLoading: true,
 
       addProject: (project) => {
         const id = crypto.randomUUID()
@@ -158,7 +159,10 @@ export const useProjectStore = create<IProjectStore>()(
     {
       name: "focusflow-projects-storage",
       storage: createJSONStorage(() => createZustandStorage()),
-      version: 1
+      version: 1,
+      onRehydrateStorage: () => (state) => {
+        if (state) state.isLoading = false
+      }
     }
   )
 )

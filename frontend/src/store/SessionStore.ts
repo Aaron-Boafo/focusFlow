@@ -16,6 +16,7 @@ export const SessionStore = create<ISessionStore>()(
       history: [],
       activeSessionId: null,
       isPaused: false,
+      isLoading: true,
 
       startSession: (type, duration) => {
         const id = crypto.randomUUID()
@@ -207,7 +208,10 @@ export const SessionStore = create<ISessionStore>()(
     {
       name: "focusflow-session-storage",
       storage: createJSONStorage(() => createZustandStorage()),
-      version: 1
+      version: 1,
+      onRehydrateStorage: () => (state) => {
+        if (state) state.isLoading = false
+      }
     }
   )
 )

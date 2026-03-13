@@ -11,10 +11,13 @@ import {
 
 import * as lucideIcons from "lucide-react"
 import { useState } from "react"
-import { type ProjectStatus } from "@/store/ProjectStore"
+import { type ProjectStatus } from "@/types"
+import { ProjectGridSkeleton } from "@/components/skeletons/ProjectGridSkeleton"
 
 export function ProjectsScreen() {
-  const { projects } = useProjectStore()
+  const { projects, isLoading } = useProjectStore()
+
+  if (isLoading) return <ProjectGridSkeleton />
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState<ProjectStatus | "All">("All")
 

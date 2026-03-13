@@ -14,6 +14,7 @@ export const useAppStore = create<AppState>()(
         xpProgress: 65,
         xpToNext: 350,
       },
+      isLoading: true,
       
       updateUser: (data) =>
         set((state) => ({
@@ -23,7 +24,10 @@ export const useAppStore = create<AppState>()(
     {
       name: "focusflow-app-storage",
       storage: createJSONStorage(() => createZustandStorage()),
-      version: 1
+      version: 1,
+      onRehydrateStorage: () => (state) => {
+        if (state) state.isLoading = false
+      }
     }
   )
 )

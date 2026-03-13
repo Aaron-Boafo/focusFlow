@@ -49,6 +49,7 @@ export interface Project {
 
 export interface IProjectStore {
   projects: Project[]
+  isLoading: boolean
   addProject: (project: Omit<Project, "id">) => void
   updateProject: (projectId: string, projectData: Project) => void
   deleteProject: (projectId: string) => void
@@ -60,6 +61,7 @@ export interface IProjectStore {
 export interface IExpStore {
   totalExp: number
   level: number
+  isLoading: boolean
   addExp: (amount: number) => void
   getExpForNextLevel: (currentLevel: number) => number
   getExpSinceLastLevel: () => number
@@ -97,6 +99,7 @@ export interface ISessionStore {
   history: Session[]
   activeSessionId: string | null
   isPaused: boolean
+  isLoading: boolean
 
   // Actions
   startSession: (type: SessionType, duration: number) => string
@@ -147,6 +150,7 @@ export interface AppState {
         xpProgress: number
         xpToNext: number
     }
+    isLoading: boolean
     
     // Actions
     updateUser: (data: Partial<AppState["user"]>) => void

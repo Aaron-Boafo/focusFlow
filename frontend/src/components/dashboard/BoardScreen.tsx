@@ -20,10 +20,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { BoardSkeleton } from "@/components/skeletons/BoardSkeleton"
 
 export function BoardScreen() {
   const { projectId } = useParams()
-  const { projects, updateTaskStatus } = useProjectStore()
+  const { projects, updateTaskStatus, isLoading } = useProjectStore()
+  
+  if (isLoading) return <BoardSkeleton />
   
   const project = projects.find(p => p.id === projectId)
   const [activeTask, setActiveTask] = useState<any | null>(null)

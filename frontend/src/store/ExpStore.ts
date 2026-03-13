@@ -32,6 +32,7 @@ export const useExpStore = create<IExpStore>()(
     (set, get) => ({
       totalExp: 0,
       level: 1,
+      isLoading: true,
       streak: 0,
       dailyGoal: 100,
       history: {},
@@ -111,7 +112,10 @@ export const useExpStore = create<IExpStore>()(
     {
       name: "focusflow-exp-storage",
       storage: createJSONStorage(() => createZustandStorage()),
-      version: 1
+      version: 1,
+      onRehydrateStorage: () => (state) => {
+        if (state) state.isLoading = false
+      }
     }
   )
 )

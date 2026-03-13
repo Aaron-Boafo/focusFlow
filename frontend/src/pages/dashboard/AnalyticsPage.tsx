@@ -13,16 +13,23 @@ import {
   TrendingDown,
 } from "lucide-react"
 
+import { AnalyticsSkeleton } from "@/components/skeletons/AnalyticsSkeleton"
+
 export default function AnalyticsPage() {
-  const {} = useAppStore()
-  const { projects } = useProjectStore()
+  const { isLoading: appLoading } = useAppStore()
+  const { projects, isLoading: projectsLoading } = useProjectStore()
   const {
     level,
     getXpTitle,
     getExpForNextLevel,
     getExpSinceLastLevel,
+    isLoading: expLoading
   } = useExpStore()
-  const { getTodayStats, history: sessionHistory } = SessionStore()
+  const { getTodayStats, history: sessionHistory, isLoading: sessionLoading } = SessionStore()
+
+  if (appLoading || projectsLoading || expLoading || sessionLoading) {
+    return <AnalyticsSkeleton />
+  }
   const sessionStats = getTodayStats()
 
   // --- Task Stats ---

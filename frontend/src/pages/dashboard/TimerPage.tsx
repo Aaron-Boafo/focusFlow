@@ -2,7 +2,8 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Trophy, RotateCcw, Play, SkipForward, Pause } from "lucide-react"
 import { SessionStore } from "@/store/SessionStore"
-import type { SessionType } from "@/store/SessionStore"
+import type { SessionType } from "@/types"
+import { TimerSkeleton } from "@/components/skeletons/TimerSkeleton"
 
 export default function TimerPage() {
   const navigate = useNavigate()
@@ -16,6 +17,9 @@ export default function TimerPage() {
   const getTodayStats = SessionStore((state) => state.getTodayStats)
   const resetActiveSession = SessionStore((state) => state.resetActiveSession)
   const endSession = SessionStore((state) => state.endSession)
+  const isLoading = SessionStore((state) => state.isLoading)
+
+  if (isLoading) return <TimerSkeleton />
 
   const stats = getTodayStats()
   const activeSession = history.find(s => s.id === activeSessionId)

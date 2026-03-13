@@ -7,11 +7,18 @@ import { SessionStore } from "@/store/SessionStore"
 import { WeeklyProductivityChart } from "@/components/dashboard/WeeklyProductivityChart"
 import { Play, CheckCircle2, Timer, Clock, Medal, Layers } from "lucide-react"
 import DynamicIcon from "@/components/ui/DynamicIcon"
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton"
 
 export default function OverviewPage() {
   const navigate = useNavigate()
-  const { user } = useAppStore()
-  const { projects } = useProjectStore()
+  const { user, isLoading: appLoading } = useAppStore()
+  const { projects, isLoading: projectsLoading } = useProjectStore()
+  const { isLoading: expLoading } = useExpStore()
+  const { isLoading: sessionLoading } = SessionStore()
+
+  if (appLoading || projectsLoading || expLoading || sessionLoading) {
+    return <DashboardSkeleton />
+  }
 
   const upcomingProjects = projects
     .filter((p) => p.status !== "Completed")
