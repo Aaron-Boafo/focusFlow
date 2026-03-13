@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router-dom"
-import { useAppStore } from "@/store/useAppStore"
 import {
   Sidebar,
   SidebarContent,
