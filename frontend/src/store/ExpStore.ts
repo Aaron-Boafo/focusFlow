@@ -7,6 +7,7 @@ interface IExpStore {
   addExp: (amount: number) => void
   getExpForNextLevel: (currentLevel: number) => number
   getExpSinceLastLevel: () => number
+  getXpTitle: () => string
 }
 
 // Logic: Level n -> Level n+1 requires 100 + (n-1)*20 XP.
@@ -58,6 +59,16 @@ export const useExpStore = create<IExpStore>()(
         const { totalExp, level } = get()
         const expReqForCurrentLevel = getExpRequiredForLevel(level)
         return totalExp - expReqForCurrentLevel
+      },
+      
+      getXpTitle: () => {
+        const { level } = get()
+        if (level < 5) return "Novice Focuser"
+        if (level < 10) return "Deep Worker"
+        if (level < 20) return "Focus Master"
+        if (level < 35) return "Zen Archer"
+        if (level < 50) return "Time Lord"
+        return "Ultimate Productivity Sage"
       }
     }),
     {

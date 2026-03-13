@@ -10,6 +10,7 @@ export interface ProjectTask {
   description: string
   status: "To Do" | "In Progress" | "Done"
   priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+  completedAt?: string
 }
 
 export interface Project {
@@ -51,7 +52,8 @@ export const useProjectStore = create<IProjectStore>()(
 
         // Auto-complete tasks if project is born completed
         if (project.status === "Completed") {
-          initialTasks = initialTasks.map(t => ({ ...t, status: "Done" }))
+          const now = new Date().toISOString()
+          initialTasks = initialTasks.map(t => ({ ...t, status: "Done", completedAt: now }))
         }
         
         const tasksLeft = initialTasks.filter(t => t.status !== "Done").length
@@ -106,7 +108,7 @@ export const useProjectStore = create<IProjectStore>()(
                   status: newStatus,
                   tasksLeft: 0,
                   progress: 100,
-                  tasks: p.tasks.map(t => ({ ...t, status: "Done" }))
+                  tasks: p.tasks.map(t => ({ ...t, status: "Done", completedAt: t.completedAt || new Date().toISOString() }))
                 }
               }
 
@@ -144,7 +146,11 @@ export const useProjectStore = create<IProjectStore>()(
                     xpToReward = -priorityXP
                   }
 
-                  return { ...t, status: newStatus }
+                  return { 
+                    ...t, 
+                    status: newStatus,
+                    completedAt: newStatus === "Done" ? (t.completedAt || new Date().toISOString()) : undefined
+                  }
                 }
                 return t
               })

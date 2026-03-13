@@ -43,6 +43,9 @@ interface ISessionStore {
     focusHours: number
     streak: number
     rank: number
+    sessionsGrowth: string
+    focusHoursGrowth: string
+    totalStreakDays: number
   }
 }
 
@@ -173,26 +176,78 @@ export const SessionStore = create<ISessionStore>()(
       resetActiveSession: () => set({ activeSessionId: null, isPaused: false }),
 
       getTodayStats: () => {
-        const today = new Date().toISOString().split("T")[0]
         const history = get().history
-        const todaySessions = history.filter((s) => s.date === today)
+        const today = new Date().toISOString().split("T")[0]
+        
+        // Setup yesterday's date for comparison
+        const yesterdayDate = new Date()
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+        const yesterday = yesterdayDate.toISOString().split("T")[0]
 
-        // Count actual focus time from all focus sessions today
+        const todaySessions = history.filter((s) => s.date === today)
+        const yesterdaySessions = history.filter((s) => s.date === yesterday)
+
+        // Focus Hours Logic
         const focusSeconds = todaySessions
+          .filter((s) => s.type === "Focus")
+          .reduce((acc, s) => acc + s.elapsedTime, 0)
+        
+        const prevFocusSeconds = yesterdaySessions
           .filter((s) => s.type === "Focus")
           .reduce((acc, s) => acc + s.elapsedTime, 0)
 
         const focusHours = parseFloat((focusSeconds / 3600).toFixed(1))
+        const prevFocusHours = parseFloat((prevFocusSeconds / 3600).toFixed(1))
 
-        // Streak is the number of COMPLETED focus sessions today
+        // Session Streak Logic (Sessions completed TODAY)
         const streak = todaySessions.filter(
           (s) => s.type === "Focus" && s.status === "complete"
         ).length
+        
+        const prevStreak = yesterdaySessions.filter(
+          (s) => s.type === "Focus" && s.status === "complete"
+        ).length
 
-        // Simple rank logic: #50 - streak, floor at #1
+        // Helper for growth calculation
+        const calculateGrowth = (current: number, previous: number) => {
+          if (previous === 0) return current > 0 ? "+100%" : "0%"
+          const growth = Math.round(((current - previous) / previous) * 100)
+          return (growth >= 0 ? "+" : "") + growth + "%"
+        }
+
+        const diffHours = parseFloat((focusHours - prevFocusHours).toFixed(1))
+        const sessionsGrowth = calculateGrowth(streak, prevStreak)
+        const focusHoursGrowth = (diffHours >= 0 ? "+" : "") + diffHours + "h"
         const rank = Math.max(1, 50 - streak * 2)
 
-        return { focusHours, streak, rank }
+        // Total Streak Days (Consecutive days with at least one completed session)
+        const getStreakDays = () => {
+          const completedDates = [...new Set(history
+            .filter(s => s.type === "Focus" && s.status === "complete")
+            .map(s => s.date))].sort().reverse()
+          
+          if (completedDates.length === 0) return 0
+          
+          let count = 0
+          let currentCheck = new Date(today)
+          
+          for (const dateStr of completedDates) {
+            const checkStr = currentCheck.toISOString().split("T")[0]
+            if (dateStr === checkStr) {
+              count++
+              currentCheck.setDate(currentCheck.getDate() - 1)
+            } else if (dateStr > checkStr) {
+              continue // Just in case of future dates
+            } else {
+              break // Gap found
+            }
+          }
+          return count
+        }
+
+        const totalStreakDays = getStreakDays()
+
+        return { focusHours, streak, rank, sessionsGrowth, focusHoursGrowth, totalStreakDays }
       },
     }),
     {

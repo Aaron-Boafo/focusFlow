@@ -1,4 +1,4 @@
-import { useAppStore } from "@/store/useAppStore"
+import { SessionStore } from "@/store/SessionStore"
 import { Bar, BarChart, ResponsiveContainer, XAxis } from "recharts"
 import {
   ChartContainer,
@@ -13,13 +13,45 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export function WeeklyProductivityChart() {
-  const { productivityData } = useAppStore()
+// Given a date, returns "Mon", "Tue", etc.
+function getDayLabel(dateStr: string) {
+  const d = new Date(dateStr + "T00:00:00")
+  return d.toLocaleDateString("en-US", { weekday: "short" })
+}
 
-  // Chart configuration to pass to shadcn ChartContainer
+export function WeeklyProductivityChart() {
+  const history = SessionStore((s) => s.history)
+
+  // Build the last 7 days in order (oldest → today)
+  const today = new Date()
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(today.getDate() - (6 - i))
+    return d.toISOString().split("T")[0]
+  })
+
+  const productivityData = weekDays.map((dateStr) => {
+    const sessionsForDay = history.filter(
+      (s) => s.date === dateStr && s.type === "Focus"
+    )
+    const totalSeconds = sessionsForDay.reduce(
+      (acc, s) => acc + s.elapsedTime,
+      0
+    )
+    const hours = parseFloat((totalSeconds / 3600).toFixed(2))
+    return { day: getDayLabel(dateStr), hours }
+  })
+
+  const avgHours = productivityData.length
+    ? (
+        productivityData.reduce((a, d) => a + d.hours, 0) /
+        productivityData.length
+      ).toFixed(1)
+    : "0"
+
   const chartConfig = {
     hours: {
-      label: "Hours Typed",
+      label: "Focus Hours",
       color: "hsl(var(--primary))",
     },
   }
@@ -30,7 +62,7 @@ export function WeeklyProductivityChart() {
         <div>
           <h4 className="text-lg font-bold">Weekly Productivity</h4>
           <p className="text-sm text-muted-foreground">
-            Average 5.2 hours per day
+            Avg {avgHours} hours per day this week
           </p>
         </div>
         <Select defaultValue="7days">
