@@ -189,7 +189,8 @@ export const useProjectStore = create<IProjectStore>()(
       }
     }),
     {
-      name: "focusflow-projects-storage"
+      name: "focusflow-projects-storage",
+      version: 1
     }
   )
 )

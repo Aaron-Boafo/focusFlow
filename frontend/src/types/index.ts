@@ -51,24 +51,24 @@ export interface AppState {
         xpProgress: number
         xpToNext: number
     }
-    stats: {
-        tasksCompletedToday: number
-        tasksTotalToday: number
-        tasksGrowth: string
-        sessions: number
-        sessionsGrowth: string
-        focusHours: number
-        focusHoursGrowth: string
-        streakDays: number
-    }
-    productivityData: ProductivityData[]
-    nextTasks: Task[]
-    kanbanTasks: KanbanTask[]
-
+    
     // Actions
     updateUser: (data: Partial<AppState["user"]>) => void
-    completeTask: (taskId: string) => void
-    addFocusSession: (hours: number) => void
-    moveKanbanTask: (taskId: string, newStatus: KanbanTask["status"]) => void
-    addKanbanTask: (task: Omit<KanbanTask, "id">) => void
+}
+
+export interface AuthUser {
+  id: string
+  email: string
+  name: string
+  avatar?: string
+}
+
+export interface IAuthStore {
+  user: AuthUser | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  login: (email: string, pass: string) => Promise<void>
+  signup: (name: string, email: string, pass: string) => Promise<void>
+  logout: () => void
+  skipToDemo: () => void
 }

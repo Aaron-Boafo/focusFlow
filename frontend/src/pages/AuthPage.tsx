@@ -1,6 +1,11 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Navbar } from "@/components/LandingSections"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuthStore } from "@/store/AuthStore"
+import { useAppStore } from "@/store/useAppStore"
+import { loginSchema, signupSchema } from "@/lib/schemas"
+import { toast } from "sonner"
 import {
   Eye,
   EyeOff,
@@ -9,17 +14,94 @@ import {
   User,
   ShieldCheck,
   Loader2,
+  ArrowRight,
+  HelpCircle,
 } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function AuthPage() {
+  const navigate = useNavigate()
+  const { login, signup, isLoading } = useAuthStore()
+  const { updateUser } = useAppStore()
+
+  // Form states
+  const [loginEmail, setLoginEmail] = useState("")
+  const [loginPass, setLoginPass] = useState("")
+
+  const [signupName, setSignupName] = useState("")
+  const [signupEmail, setSignupEmail] = useState("")
+  const [signupPass, setSignupPass] = useState("")
+  const [signupConfirmPass, setSignupConfirmPass] = useState("")
+
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [showSignupPassword, setShowSignupPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setTimeout(() => setIsLoading(false), 2000)
+
+    // Zod validation
+    const result = loginSchema.safeParse({
+      email: loginEmail,
+      password: loginPass,
+    })
+    if (!result.success) {
+      toast.error(result.error.issues[0].message)
+      return
+    }
+
+    const toastId = toast.loading("Signing in to your account...")
+
+    try {
+      await login(loginEmail, loginPass)
+      const name =
+        loginEmail.split("@")[0].charAt(0).toUpperCase() +
+        loginEmail.split("@")[0].slice(1)
+      updateUser({ name })
+      toast.success(`Welcome back, ${name}!`, { id: toastId })
+      navigate("/dashboard")
+    } catch (error) {
+      toast.error("Login failed. Please check your credentials.", {
+        id: toastId,
+      })
+    }
+  }
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Zod validation
+    const result = signupSchema.safeParse({
+      name: signupName,
+      email: signupEmail,
+      password: signupPass,
+      confirmPassword: signupConfirmPass,
+    })
+
+    if (!result.success) {
+      toast.error(result.error.issues[0].message)
+      return
+    }
+
+    const toastId = toast.loading("Creating your profile...")
+
+    try {
+      await signup(signupName, signupEmail, signupPass)
+      updateUser({ name: signupName })
+      toast.success("Account created successfully! Welcome aboard.", {
+        id: toastId,
+      })
+      navigate("/dashboard")
+    } catch (error) {
+      toast.error("Signup failed. Please try again.", { id: toastId })
+    }
+  }
+
+  const skipToDemo = () => {
+    navigate("/dashboard")
   }
 
   return (
@@ -59,15 +141,30 @@ export default function AuthPage() {
                   </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleLogin} className="space-y-5">
                   <div className="space-y-2">
-                    <label className="ml-1 text-sm font-semibold text-foreground/80">
-                      Email
-                    </label>
+                    <div className="ml-1 flex items-center gap-1.5">
+                      <label className="text-sm font-semibold text-foreground/80">
+                        Email
+                      </label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground/60 transition-colors hover:text-primary" />
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          className="max-w-[200px] text-center"
+                        >
+                          Used to sync your data across devices.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                     <div className="group relative">
                       <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type="email"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="name@company.com"
                         className="h-14 w-full rounded-xl border border-input bg-muted/50 pr-4 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
@@ -77,9 +174,22 @@ export default function AuthPage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-1">
-                      <label className="text-sm font-semibold text-foreground/80">
-                        Password
-                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <label className="text-sm font-semibold text-foreground/80">
+                          Password
+                        </label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground/60 transition-colors hover:text-primary" />
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="max-w-[200px] text-center"
+                          >
+                            Must be at least 6 characters long.
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                       <a
                         href="#"
                         className="text-xs font-bold text-primary hover:underline"
@@ -91,6 +201,8 @@ export default function AuthPage() {
                       <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type={showLoginPassword ? "text" : "password"}
+                        value={loginPass}
+                        onChange={(e) => setLoginPass(e.target.value)}
                         placeholder="Enter your password"
                         className="h-14 w-full rounded-xl border border-input bg-muted/50 pr-12 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
@@ -148,7 +260,7 @@ export default function AuthPage() {
                   </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSignup} className="space-y-5">
                   <div className="space-y-1.5">
                     <label className="ml-1 text-sm font-semibold text-foreground/80">
                       Full Name
@@ -157,6 +269,8 @@ export default function AuthPage() {
                       <User className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type="text"
+                        value={signupName}
+                        onChange={(e) => setSignupName(e.target.value)}
                         placeholder="John Doe"
                         className="w-full rounded-xl border border-input bg-muted/50 py-3.5 pr-4 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
@@ -165,13 +279,28 @@ export default function AuthPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="ml-1 text-sm font-semibold text-foreground/80">
-                      Email Address
-                    </label>
+                    <div className="ml-1 flex items-center gap-1.5">
+                      <label className="text-sm font-semibold text-foreground/80">
+                        Email Address
+                      </label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground/60 transition-colors hover:text-primary" />
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          className="max-w-[200px] text-center"
+                        >
+                          Better results with a verified company email.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                     <div className="group relative">
                       <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type="email"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
                         placeholder="name@company.com"
                         className="w-full rounded-xl border border-input bg-muted/50 py-3.5 pr-4 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
@@ -183,13 +312,28 @@ export default function AuthPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="ml-1 text-sm font-semibold text-foreground/80">
-                      Password
-                    </label>
+                    <div className="ml-1 flex items-center gap-1.5">
+                      <label className="text-sm font-semibold text-foreground/80">
+                        Password
+                      </label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground/60 transition-colors hover:text-primary" />
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          className="max-w-[200px] text-center"
+                        >
+                          Minimum 8 characters with at least one number.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                     <div className="group relative">
                       <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type={showSignupPassword ? "text" : "password"}
+                        value={signupPass}
+                        onChange={(e) => setSignupPass(e.target.value)}
                         placeholder="••••••••"
                         className="w-full rounded-xl border border-input bg-muted/50 py-3.5 pr-12 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
@@ -208,16 +352,6 @@ export default function AuthPage() {
                         )}
                       </button>
                     </div>
-
-                    <div className="mt-2 flex gap-1 px-1">
-                      <div className="h-1 flex-1 rounded-full bg-primary/40"></div>
-                      <div className="h-1 flex-1 rounded-full bg-border"></div>
-                      <div className="h-1 flex-1 rounded-full bg-border"></div>
-                      <div className="h-1 flex-1 rounded-full bg-border"></div>
-                    </div>
-                    <p className="px-1 text-[11px] text-muted-foreground">
-                      Password must be at least 8 characters long.
-                    </p>
                   </div>
 
                   <div className="space-y-1.5">
@@ -228,6 +362,8 @@ export default function AuthPage() {
                       <ShieldCheck className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type="password"
+                        value={signupConfirmPass}
+                        onChange={(e) => setSignupConfirmPass(e.target.value)}
                         placeholder="••••••••"
                         className="w-full rounded-xl border border-input bg-muted/50 py-3.5 pr-4 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
@@ -255,29 +391,39 @@ export default function AuthPage() {
                     </button>
                   </div>
                 </form>
-
-                <div className="mt-8 flex justify-center gap-6">
-                  <a
-                    href="#"
-                    className="text-xs text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    Terms of Service
-                  </a>
-                  <a
-                    href="#"
-                    className="text-xs text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    Privacy Policy
-                  </a>
-                  <a
-                    href="#"
-                    className="text-xs text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    Help Center
-                  </a>
-                </div>
               </div>
             </TabsContent>
+
+            <div className="mt-8 flex flex-col items-center gap-4">
+              <button
+                onClick={skipToDemo}
+                className="group flex items-center gap-2 text-sm font-bold text-muted-foreground transition-colors hover:text-primary"
+              >
+                Skip to Demo (Local Usage)
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </button>
+
+              <div className="flex justify-center gap-6">
+                <a
+                  href="#"
+                  className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Terms of Service
+                </a>
+                <a
+                  href="#"
+                  className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Privacy Policy
+                </a>
+                <a
+                  href="#"
+                  className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Help Center
+                </a>
+              </div>
+            </div>
           </Tabs>
         </div>
       </main>

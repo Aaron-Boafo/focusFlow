@@ -11,7 +11,9 @@ import TimerPage from "@/pages/dashboard/TimerPage"
 import FocusModePage from "@/pages/dashboard/FocusModePage"
 import AnalyticsPage from "@/pages/dashboard/AnalyticsPage"
 import SettingsPage from "@/pages/dashboard/SettingsPage"
+import NotFoundPage from "@/pages/NotFoundPage"
 import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 export function App() {
   const tick = SessionStore((state) => state.tick)
@@ -28,7 +30,7 @@ export function App() {
   }, [activeSessionId, tick])
 
   return (
-    <>
+    <TooltipProvider>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
@@ -44,10 +46,14 @@ export function App() {
 
         {/* Focus Mode operates uniquely without the Sidebar */}
         <Route path="/focus" element={<FocusModePage />} />
+
+        {/* 404 Catch-all */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Toaster />
-    </>
+    </TooltipProvider>
   )
 }
+
 
 export default App

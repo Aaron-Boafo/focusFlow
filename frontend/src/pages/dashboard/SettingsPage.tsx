@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
+import { accountUpdateSchema } from "@/lib/schemas"
 
 export default function SettingsPage() {
   const { user, updateUser } = useAppStore()
@@ -34,14 +35,19 @@ export default function SettingsPage() {
   }
 
   const handleUpdateAccount = () => {
-    if (!userName.trim()) {
-      toast.error("Name cannot be empty")
+    // Zod validation
+    const result = accountUpdateSchema.safeParse({ name: userName, password: userPassword })
+    
+    if (!result.success) {
+      toast.error(result.error.issues[0].message)
       return
     }
+
     updateUser({ name: userName, password: userPassword })
     toast.success("Account updated successfully!")
     setIsDialogOpen(false)
   }
+
 
   
   // Use selectors for better reactivity

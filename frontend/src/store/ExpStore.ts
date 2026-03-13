@@ -131,7 +131,8 @@ export const useExpStore = create<IExpStore>()(
       }
     }),
     {
-      name: "focusFlow-exp-storage",
+      name: "focusflow-exp-storage",
+      version: 1
     }
   )
 )

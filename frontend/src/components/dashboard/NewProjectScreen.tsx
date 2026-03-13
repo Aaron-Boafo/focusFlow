@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 import { AVAILABLE_ICONS } from "@/constants"
+import { projectSchema } from "@/lib/schemas"
 
 export function NewProjectScreen() {
   const navigate = useNavigate()
@@ -93,7 +94,25 @@ export function NewProjectScreen() {
 
   const handleSubmit = (e?: React.MouseEvent) => {
     if (e) e.preventDefault()
-    if (!title) return alert("Please enter a project title.")
+    
+    // Zod validation
+    const result = projectSchema.safeParse({
+      title,
+      description,
+      status,
+      icon: selectedIcon,
+      tasks: tasks.map(t => ({
+        title: t.title,
+        status: t.status,
+        priority: t.priority,
+        description: t.description,
+      })),
+    })
+
+    if (!result.success) {
+      toast.error(result.error.issues[0].message)
+      return
+    }
 
     // Build payload mapping strictly to Project interface
     const newProject: Omit<Project, "id" | "progress" | "tasksLeft"> = {
@@ -119,6 +138,7 @@ export function NewProjectScreen() {
       navigate("/tasks")
     } else {
       addProject(newProject as unknown as Omit<Project, "id">)
+      toast.success("Project created successfully!")
       navigate("/tasks")
     }
   }

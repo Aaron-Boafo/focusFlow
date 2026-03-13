@@ -251,7 +251,8 @@ export const SessionStore = create<ISessionStore>()(
       },
     }),
     {
-      name: "focusFlow-session-storage",
+      name: "focusflow-session-storage",
+      version: 1
     }
   )
 )
