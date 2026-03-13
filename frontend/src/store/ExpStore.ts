@@ -1,18 +1,7 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
-
-interface IExpStore {
-  totalExp: number
-  level: number
-  addExp: (amount: number) => void
-  getExpForNextLevel: (currentLevel: number) => number
-  getExpSinceLastLevel: () => number
-  getXpTitle: () => string
-  streak: number
-  dailyGoal: number
-  history: Record<string, number> // date -> xp
-  getWeeklyStatus: () => boolean[] // last 7 days
-}
+import { persist, createJSONStorage } from "zustand/middleware"
+import { createZustandStorage } from "@/services/storageService"
+import type { IExpStore } from "@/types"
 
 // Logic: Level n -> Level n+1 requires 100 + (n-1)*20 XP.
 function getExpRequiredForLevel(levelTarget: number) {
@@ -61,21 +50,13 @@ export const useExpStore = create<IExpStore>()(
           let currentStreak = 0
           let checkDate = new Date()
           
-          // If we haven't hit today's goal yet, we check from yesterday backwards
-          // But if we HAVE hit today's goal, we include today.
-          // For simplicity, we'll count how many consecutive days have ANY XP or hit a goal?
-          // Let's go with "Days with >= dailyGoal XP"
-          
           while (true) {
             const dateStr = checkDate.toISOString().split("T")[0]
             if ((newHistory[dateStr] || 0) >= state.dailyGoal) {
               currentStreak++
               checkDate.setDate(checkDate.getDate() - 1)
             } else {
-              // Special case: if today is not yet complete, the streak shouldn't break 
-              // UNLESS yesterday was also not complete.
               if (dateStr === today) {
-                // Today not yet complete, check yesterday
                 checkDate.setDate(checkDate.getDate() - 1)
                 const yesterdayStr = checkDate.toISOString().split("T")[0]
                 if ((newHistory[yesterdayStr] || 0) < state.dailyGoal) {
@@ -96,13 +77,10 @@ export const useExpStore = create<IExpStore>()(
         })
       },
 
-      // Returns the delta XP needed *for this specific level tier* 
-      // i.e., at Level N, how much XP from start of Level N to Level N+1
       getExpForNextLevel: (currentLevel) => {
         return 100 + (currentLevel - 1) * 20
       },
 
-      // Returns how much XP the user has earned *since hitting their current level*
       getExpSinceLastLevel: () => {
         const { totalExp, level } = get()
         const expReqForCurrentLevel = getExpRequiredForLevel(level)
@@ -132,6 +110,7 @@ export const useExpStore = create<IExpStore>()(
     }),
     {
       name: "focusflow-exp-storage",
+      storage: createJSONStorage(() => createZustandStorage()),
       version: 1
     }
   )

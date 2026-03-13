@@ -1,41 +1,8 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { persist, createJSONStorage } from "zustand/middleware"
 import { useExpStore } from "./ExpStore"
-
-export type ProjectStatus = "In Progress" | "Completed" | "Archived"
-
-export interface ProjectTask {
-  id: string
-  title: string
-  description: string
-  status: "To Do" | "In Progress" | "Done"
-  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
-  completedAt?: string
-}
-
-export interface Project {
-  id: string
-  title: string
-  status: ProjectStatus
-  description: string
-  icon: string
-  iconColor: string
-  iconBg: string
-  progress: number
-  tasksLeft: number
-  contributors: string[]
-  deadline?: string
-  tasks: ProjectTask[]
-}
-
-interface IProjectStore {
-  projects: Project[]
-  addProject: (project: Omit<Project, "id">) => void
-  updateProject: (projectId: string, projectData: Project) => void
-  deleteProject: (projectId: string) => void
-  updateProjectStatus: (projectId: string, newStatus: ProjectStatus) => void
-  updateTaskStatus: (projectId: string, taskId: string, newStatus: ProjectTask["status"]) => void
-}
+import { createZustandStorage } from "@/services/storageService"
+import type { IProjectStore, Project, ProjectStatus, ProjectTask } from "@/types"
 
 export const useProjectStore = create<IProjectStore>()(
   persist(
@@ -190,6 +157,7 @@ export const useProjectStore = create<IProjectStore>()(
     }),
     {
       name: "focusflow-projects-storage",
+      storage: createJSONStorage(() => createZustandStorage()),
       version: 1
     }
   )

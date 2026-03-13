@@ -1,6 +1,7 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { persist, createJSONStorage } from "zustand/middleware"
 import type { AppState } from "@/types"
+import { createZustandStorage } from "@/services/storageService"
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -21,6 +22,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "focusflow-app-storage",
+      storage: createJSONStorage(() => createZustandStorage()),
       version: 1
     }
   )

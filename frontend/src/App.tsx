@@ -15,6 +15,8 @@ import NotFoundPage from "@/pages/NotFoundPage"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
+import { ProtectedRoute, GuestGuard } from "@/components/AuthGuard"
+
 export function App() {
   const tick = SessionStore((state) => state.tick)
   const activeSessionId = SessionStore((state) => state.activeSessionId)
@@ -32,20 +34,24 @@ export function App() {
   return (
     <TooltipProvider>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/auth" element={<AuthPage />} />
+        <Route element={<GuestGuard />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+        </Route>
         
         {/* Dashboard Routes wrapped in the persistent Layout */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/tasks/*" element={<TaskBoardPage />} />
-          <Route path="/timer" element={<TimerPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Route>
+        <Route element={<ProtectedRoute allowGuest={true} />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/tasks/*" element={<TaskBoardPage />} />
+            <Route path="/timer" element={<TimerPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
 
-        {/* Focus Mode operates uniquely without the Sidebar */}
-        <Route path="/focus" element={<FocusModePage />} />
+          {/* Focus Mode operates uniquely without the Sidebar */}
+          <Route path="/focus" element={<FocusModePage />} />
+        </Route>
 
         {/* 404 Catch-all */}
         <Route path="*" element={<NotFoundPage />} />

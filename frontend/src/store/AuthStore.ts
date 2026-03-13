@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { IAuthStore } from "@/types"
+import { migrateGuestData } from "@/lib/migration"
 
 export const useAuthStore = create<IAuthStore>()(
   persist(
@@ -26,6 +27,9 @@ export const useAuthStore = create<IAuthStore>()(
           isAuthenticated: true, 
           isLoading: false 
         })
+
+        // Trigger migration
+        await migrateGuestData()
       },
 
       signup: async (name, email, _pass) => {
@@ -44,21 +48,23 @@ export const useAuthStore = create<IAuthStore>()(
           isAuthenticated: true, 
           isLoading: false 
         })
+
+        // Trigger migration
+        await migrateGuestData()
       },
 
       logout: () => {
         set({ user: null, isAuthenticated: false })
+        // Note: Strategy will switch back to local on next access
       },
 
       skipToDemo: () => {
-        // Just set a flag or just do nothing - the navigation is handled in the component
-        // But we could set a "temp" guest state if needed
         set({ isAuthenticated: false, user: null })
       },
     }),
     {
       name: "focusflow-auth-storage",
-      version: 1
+      version: 1,
     }
   )
 )

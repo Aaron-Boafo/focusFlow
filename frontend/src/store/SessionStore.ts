@@ -1,53 +1,7 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
-
-export type SessionStatus = "complete" | "ended" | "progress"
-export type SessionType = "Focus" | "Short Break" | "Long Break"
-
-export interface Session {
-  id: string
-  type: SessionType
-  startTime: number // timestamp
-  duration: number // total target in seconds
-  elapsedTime: number // actual worked in seconds
-  status: SessionStatus
-  date: string // YYYY-MM-DD for grouping
-  exp?: number
-}
-
-interface ISessionStore {
-  settings: {
-    focus: number
-    shortBreak: number
-    longBreak: number
-    desktopNotifications: boolean
-    autoStartBreaks: boolean
-  }
-
-  history: Session[]
-  activeSessionId: string | null
-  isPaused: boolean
-
-  // Actions
-  startSession: (type: SessionType, duration: number) => string
-  updateSession: (id: string, elapsedTime: number, status: SessionStatus) => void
-  completeSession: (id: string) => void
-  endSession: (id: string) => void
-  updateSettings: (settings: Partial<ISessionStore["settings"]>) => void
-
-  setActiveSession: (id: string | null) => void
-  setPaused: (paused: boolean) => void
-  tick: () => void
-  resetActiveSession: () => void
-  getTodayStats: () => {
-    focusHours: number
-    streak: number
-    rank: number
-    sessionsGrowth: string
-    focusHoursGrowth: string
-    totalStreakDays: number
-  }
-}
+import { persist, createJSONStorage } from "zustand/middleware"
+import { createZustandStorage } from "@/services/storageService"
+import type { ISessionStore, Session, SessionStatus, SessionType } from "@/types"
 
 export const SessionStore = create<ISessionStore>()(
   persist(
@@ -252,6 +206,7 @@ export const SessionStore = create<ISessionStore>()(
     }),
     {
       name: "focusflow-session-storage",
+      storage: createJSONStorage(() => createZustandStorage()),
       version: 1
     }
   )
