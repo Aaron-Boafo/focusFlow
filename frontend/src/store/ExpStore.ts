@@ -41,7 +41,7 @@ export const useExpStore = create<IExpStore>()(
 
       addExp: (amount) => {
         set((state) => {
-          const newExp = state.totalExp + amount
+          const newExp = Math.max(0, state.totalExp + amount)
           const newLevel = calculateLevelFromExp(newExp)
           return { totalExp: newExp, level: newLevel }
         })

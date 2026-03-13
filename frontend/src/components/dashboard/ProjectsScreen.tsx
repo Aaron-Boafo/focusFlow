@@ -10,9 +10,23 @@ import {
 } from "@/components/ui/breadcrumb"
 
 import * as lucideIcons from "lucide-react"
+import { useState } from "react"
+import { type ProjectStatus } from "@/store/ProjectStore"
 
 export function ProjectsScreen() {
   const { projects } = useProjectStore()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState<ProjectStatus | "All">("All")
+
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch = 
+      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesTab = activeTab === "All" || project.status === activeTab
+
+    return matchesSearch && matchesTab
+  })
 
   return (
     <div className="flex flex-col min-h-full">
@@ -42,6 +56,8 @@ export function ProjectsScreen() {
                   className="pl-10 pr-4 py-2 bg-muted border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary transition-all outline-none" 
                   placeholder="Search projects..." 
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <Link to="/tasks/new">
@@ -56,16 +72,30 @@ export function ProjectsScreen() {
 
         {/* Tabs */}
         <div className="flex border-b border-border mb-8 gap-8 overflow-x-auto">
-          <button className="pb-4 border-b-2 border-primary text-primary text-sm font-bold whitespace-nowrap">All Projects</button>
-          <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground text-sm font-medium transition-colors whitespace-nowrap">In Progress</button>
-          <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground text-sm font-medium transition-colors whitespace-nowrap">Completed</button>
-          <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground text-sm font-medium transition-colors whitespace-nowrap">Archived</button>
+          {[
+            { label: "All Projects", id: "All" },
+            { label: "In Progress", id: "In Progress" },
+            { label: "Completed", id: "Completed" },
+            { label: "Archived", id: "Archived" }
+          ].map((tab) => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`pb-4 border-b-2 text-sm transition-colors whitespace-nowrap ${
+                activeTab === tab.id 
+                  ? "border-primary text-primary font-bold" 
+                  : "border-transparent text-muted-foreground hover:text-foreground font-medium"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Project Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
-          {projects.map((project) => {
+          {filteredProjects.map((project) => {
             const Icon = (lucideIcons as any)[project.icon] || Target
 
             // Generate status badge styling dynamically based on status text
@@ -96,7 +126,33 @@ export function ProjectsScreen() {
                   <div className="w-full h-2 bg-muted rounded-full mb-6 relative">
                     <div className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${project.progress}%` }}></div>
                   </div>
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-between">
+                    <div className="flex -space-x-3 overflow-hidden">
+                      {project.tasks.slice(0, 6).map((task, i) => {
+                        const initial = task.title.trim().charAt(0).toUpperCase() || "?"
+                        // Cycle through some colors based on index or title char code
+                        const bgColors = [
+                          "bg-blue-500", "bg-purple-500", "bg-pink-500", 
+                          "bg-amber-500", "bg-emerald-500", "bg-indigo-500"
+                        ]
+                        const bgColor = bgColors[i % bgColors.length]
+                        
+                        return (
+                          <div 
+                            key={task.id} 
+                            className={`w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-[10px] font-bold text-white shadow-sm ${bgColor}`}
+                            title={task.title}
+                          >
+                            {initial}
+                          </div>
+                        )
+                      })}
+                      {project.tasks.length > 6 && (
+                        <div className="w-8 h-8 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground shadow-sm">
+                          +{project.tasks.length - 6}
+                        </div>
+                      )}
+                    </div>
                     {project.tasksLeft > 0 && <span className="text-xs text-muted-foreground font-medium">{project.tasksLeft} tasks left</span>}
                   </div>
                   <Link to={`/tasks/${project.id}`}>

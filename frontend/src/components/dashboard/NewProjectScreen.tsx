@@ -33,7 +33,7 @@ import { AVAILABLE_ICONS } from "@/constants"
 export function NewProjectScreen() {
   const navigate = useNavigate()
   const { projectId } = useParams()
-  const { projects, addProject, updateProject } = useProjectStore()
+  const { projects, addProject, updateProject, deleteProject } = useProjectStore()
 
   const isEditMode = !!projectId
   const projectToEdit = isEditMode
@@ -119,6 +119,14 @@ export function NewProjectScreen() {
       navigate("/tasks")
     } else {
       addProject(newProject as unknown as Omit<Project, "id">)
+      navigate("/tasks")
+    }
+  }
+
+  const handleDeleteProject = () => {
+    if (projectToEdit) {
+      deleteProject(projectToEdit.id)
+      toast.success("Project deleted successfully")
       navigate("/tasks")
     }
   }
@@ -348,6 +356,37 @@ export function NewProjectScreen() {
 
         {/* Form Actions */}
         <div className="flex items-center justify-end gap-4 border-t border-border pt-8 pb-12">
+          {isEditMode && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  type="button" 
+                  className="rounded-lg px-4 text-sm font-bold text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Project
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-destructive">Delete Project</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this project? This action cannot be undone and all associated task data will be lost.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete Project
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+
+          <div className="flex-1" />
+
           <Button
             variant="outline"
             type="button"

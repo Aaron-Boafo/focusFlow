@@ -31,6 +31,7 @@ interface IProjectStore {
   projects: Project[]
   addProject: (project: Omit<Project, "id">) => void
   updateProject: (projectId: string, projectData: Project) => void
+  deleteProject: (projectId: string) => void
   updateProjectStatus: (projectId: string, newStatus: ProjectStatus) => void
   updateTaskStatus: (projectId: string, taskId: string, newStatus: ProjectTask["status"]) => void
 }
@@ -70,7 +71,25 @@ export const useProjectStore = create<IProjectStore>()(
 
       updateProject: (projectId, projectData) => {
         set((state) => ({
-          projects: state.projects.map(p => p.id === projectId ? projectData : p)
+          projects: state.projects.map(p => {
+            if (p.id !== projectId) return p
+            
+            const tasksLeft = projectData.tasks.filter(t => t.status !== "Done").length
+            const totalTasks = projectData.tasks.length
+            const progress = totalTasks === 0 ? 0 : Math.round(((totalTasks - tasksLeft) / totalTasks) * 100)
+
+            return {
+              ...projectData,
+              tasksLeft,
+              progress
+            }
+          })
+        }))
+      },
+
+      deleteProject: (projectId) => {
+        set((state) => ({
+          projects: state.projects.filter(p => p.id !== projectId)
         }))
       },
 
@@ -109,16 +128,22 @@ export const useProjectStore = create<IProjectStore>()(
 
               const updatedTasks = p.tasks.map((t) => {
                 if (t.id === taskId) {
-                  // Capture priority to grant XP if it transitioned to Done
+                  const priorityXP = {
+                    LOW: 10,
+                    MEDIUM: 20,
+                    HIGH: 30,
+                    CRITICAL: 40
+                  }[t.priority] || 10
+
+                  // If task is moving to Done, reward XP
                   if (newStatus === "Done" && t.status !== "Done") {
-                    switch (t.priority) {
-                      case "LOW": xpToReward = 10; break;
-                      case "MEDIUM": xpToReward = 20; break;
-                      case "HIGH": xpToReward = 30; break;
-                      case "CRITICAL": xpToReward = 40; break;
-                      default: xpToReward = 10;
-                    }
+                    xpToReward = priorityXP
+                  } 
+                  // If task is moving OUT of Done, reduce XP
+                  else if (t.status === "Done" && newStatus !== "Done") {
+                    xpToReward = -priorityXP
                   }
+
                   return { ...t, status: newStatus }
                 }
                 return t
@@ -146,7 +171,7 @@ export const useProjectStore = create<IProjectStore>()(
             })
           }
           
-          if (xpToReward > 0) {
+          if (xpToReward !== 0) {
             // Wait until next tick to avoid updating another store while rendering
             setTimeout(() => {
               useExpStore.getState().addExp(xpToReward)

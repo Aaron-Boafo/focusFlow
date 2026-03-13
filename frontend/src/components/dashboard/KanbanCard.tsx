@@ -21,13 +21,10 @@ export function KanbanCard({ task }: { task: KanbanTask }) {
 
   // Styling maps based on priority/status
   const priorityColors: Record<string, string> = {
-    "High Priority":
-      "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
-    Medium: "bg-primary/10 text-primary",
-    Low: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
-    "In Review": "bg-primary/10 text-primary",
-    Completed:
-      "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400",
+    LOW: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+    MEDIUM: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    HIGH: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
+    CRITICAL: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
   }
 
   const isDone = task.status === "done"
@@ -56,11 +53,11 @@ export function KanbanCard({ task }: { task: KanbanTask }) {
       {/* Header Row */}
       <div className="mb-3 flex items-start justify-between">
         <span
-          className={`rounded px-2 py-1 text-[10px] font-bold uppercase ${
-            priorityColors[task.priority] || priorityColors["Medium"]
+          className={`rounded px-2 py-1 text-[10px] font-bold ${
+            priorityColors[task.priority?.toUpperCase()] || priorityColors["MEDIUM"]
           }`}
         >
-          {task.priority}
+          {task.priority?.charAt(0).toUpperCase() + task.priority?.slice(1).toLowerCase()}
         </span>
 
         {!isDone && (
