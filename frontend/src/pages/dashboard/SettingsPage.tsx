@@ -4,9 +4,45 @@ import { useAppStore } from "@/store/useAppStore"
 import { SessionStore } from "@/store/SessionStore"
 import { toast } from "sonner"
 import { useTheme } from "@/components/theme-provider"
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Input } from "@/components/ui/input"
 
 export default function SettingsPage() {
-  const { user } = useAppStore()
+  const { user, updateUser } = useAppStore()
+  
+  // Account modal state
+  const [userName, setUserName] = useState(user.name)
+  const [userPassword, setUserPassword] = useState(user.password || "")
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const handleUpdateAccount = () => {
+    if (!userName.trim()) {
+      toast.error("Name cannot be empty")
+      return
+    }
+    updateUser({ name: userName, password: userPassword })
+    toast.success("Account updated successfully!")
+    setIsDialogOpen(false)
+  }
+
   
   // Use selectors for better reactivity
   const settings = SessionStore((state) => state.settings)
@@ -282,8 +318,8 @@ export default function SettingsPage() {
           <div className="p-6">
             <div className="flex items-center gap-4">
               <div className="group relative">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-slate-200 dark:border-slate-700 dark:bg-slate-800">
-                  <User className="h-8 w-8 text-slate-400" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-primary/10 text-xl font-bold text-primary dark:border-slate-700">
+                  {getInitials(user.name)}
                 </div>
                 <button className="absolute right-0 bottom-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
                   <Edit2 className="h-3 w-3" />
@@ -294,12 +330,60 @@ export default function SettingsPage() {
                   {user.name}
                 </p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {user.name.toLowerCase()}@example.com
+                  {user.name.toLowerCase().replace(/\s+/g, '')}@example.com
                 </p>
               </div>
-              <button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
-                Manage Subscription
-              </button>
+              
+              <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                    Manage Account
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="sm:max-w-[425px]">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                       <User className="h-5 w-5 text-primary" />
+                       Update Profile
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Update your personal information below. Changes will be saved to your local session.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <label htmlFor="name" className="text-sm font-medium">Full Name</label>
+                      <Input 
+                        id="name" 
+                        value={userName} 
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label htmlFor="pass" className="text-sm font-medium">New Password (optional)</label>
+                      <Input 
+                        id="pass" 
+                        type="password"
+                        value={userPassword} 
+                        onChange={(e) => setUserPassword(e.target.value)}
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                  </div>
+
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <button
+                      onClick={handleUpdateAccount}
+                      className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      Save Changes
+                    </button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </section>

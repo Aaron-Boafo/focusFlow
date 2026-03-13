@@ -31,6 +31,11 @@ export const useAppStore = create<AppState>()(
       productivityData: initialProductivity,
       nextTasks: initialTasks,
       kanbanTasks: initialKanbanTasks,
+      
+      updateUser: (data) =>
+        set((state) => ({
+          user: { ...state.user, ...data },
+        })),
 
       completeTask: (taskId) =>
         set((state) => ({

@@ -119,15 +119,6 @@ export function AppSidebar() {
         <SidebarMenu className="space-y-1">
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip="Help Center"
-              className="gap-3 py-4 text-muted-foreground transition-colors hover:text-primary"
-            >
-              <HelpCircle className="h-5 w-5" />
-              <span className="text-sm">Help Center</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
               tooltip="Logout"
               className="gap-3 py-4 text-muted-foreground transition-colors hover:text-destructive"
             >

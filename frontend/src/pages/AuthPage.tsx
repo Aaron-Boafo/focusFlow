@@ -1,7 +1,15 @@
 import { useState } from "react"
 import { Navbar } from "@/components/LandingSections"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Eye, EyeOff, Mail, Lock, User, ShieldCheck, Loader2 } from "lucide-react"
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  ShieldCheck,
+  Loader2,
+} from "lucide-react"
 
 export default function AuthPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false)
@@ -18,16 +26,22 @@ export default function AuthPage() {
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
       <Navbar />
 
-      <main className="flex flex-1 items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/10 via-background to-background dark:from-primary/5">
+      <main className="flex flex-1 items-center justify-center bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/10 via-background to-background p-6 dark:from-primary/5">
         <div className="w-full max-w-[480px]">
           <Tabs defaultValue="login" className="w-full">
             {/* Tab Triggers */}
             <div className="mb-6 flex justify-center">
               <TabsList className="grid w-full max-w-[400px] grid-cols-2 rounded-xl p-1 shadow-sm">
-                <TabsTrigger value="login" className="rounded-lg py-2.5 font-semibold">
+                <TabsTrigger
+                  value="login"
+                  className="rounded-lg py-2.5 font-semibold"
+                >
                   Login
                 </TabsTrigger>
-                <TabsTrigger value="signup" className="rounded-lg py-2.5 font-semibold">
+                <TabsTrigger
+                  value="signup"
+                  className="rounded-lg py-2.5 font-semibold"
+                >
                   Sign Up
                 </TabsTrigger>
               </TabsList>
@@ -35,7 +49,7 @@ export default function AuthPage() {
 
             {/* Login Tab */}
             <TabsContent value="login" className="mt-0 outline-none">
-              <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] md:p-10">
+              <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] md:p-10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
                 <div className="mb-8 text-center md:text-left">
                   <h1 className="mb-2 text-3xl font-black tracking-tight text-foreground">
                     Welcome Back
@@ -51,11 +65,11 @@ export default function AuthPage() {
                       Email
                     </label>
                     <div className="group relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary h-5 w-5" />
+                      <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type="email"
                         placeholder="name@company.com"
-                        className="h-14 w-full rounded-xl border border-input bg-muted/50 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="h-14 w-full rounded-xl border border-input bg-muted/50 pr-4 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
                       />
                     </div>
@@ -74,17 +88,17 @@ export default function AuthPage() {
                       </a>
                     </div>
                     <div className="group relative">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary h-5 w-5" />
+                      <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type={showLoginPassword ? "text" : "password"}
                         placeholder="Enter your password"
-                        className="h-14 w-full rounded-xl border border-input bg-muted/50 pl-11 pr-12 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="h-14 w-full rounded-xl border border-input bg-muted/50 pr-12 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute top-1/2 right-4 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {showLoginPassword ? (
                           <EyeOff className="h-5 w-5" />
@@ -99,7 +113,7 @@ export default function AuthPage() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="h-14 w-full rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-2"
+                      className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
                     >
                       {isLoading ? (
                         <>
@@ -119,30 +133,12 @@ export default function AuthPage() {
                     </p>
                   </div>
                 </form>
-
-                <div className="mt-8 flex justify-center gap-6 opacity-60 transition-all duration-500 hover:grayscale-0 grayscale">
-                  <div className="flex h-8 w-24 items-center justify-center rounded bg-muted">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      Company A
-                    </span>
-                  </div>
-                  <div className="flex h-8 w-24 items-center justify-center rounded bg-muted">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      Company B
-                    </span>
-                  </div>
-                  <div className="flex h-8 w-24 items-center justify-center rounded bg-muted">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      Company C
-                    </span>
-                  </div>
-                </div>
               </div>
             </TabsContent>
 
             {/* Signup Tab */}
             <TabsContent value="signup" className="mt-0 outline-none">
-              <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] md:p-10">
+              <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] md:p-10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
                 <div className="mb-8 text-center">
                   <h1 className="mb-2 text-3xl font-black text-foreground">
                     Create Your Account
@@ -158,11 +154,11 @@ export default function AuthPage() {
                       Full Name
                     </label>
                     <div className="group relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary h-5 w-5" />
+                      <User className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type="text"
                         placeholder="John Doe"
-                        className="py-3.5 w-full rounded-xl border border-input bg-muted/50 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full rounded-xl border border-input bg-muted/50 py-3.5 pr-4 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
                       />
                     </div>
@@ -173,11 +169,11 @@ export default function AuthPage() {
                       Email Address
                     </label>
                     <div className="group relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary h-5 w-5" />
+                      <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type="email"
                         placeholder="name@company.com"
-                        className="py-3.5 w-full rounded-xl border border-input bg-muted/50 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full rounded-xl border border-input bg-muted/50 py-3.5 pr-4 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
                       />
                     </div>
@@ -191,17 +187,19 @@ export default function AuthPage() {
                       Password
                     </label>
                     <div className="group relative">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary h-5 w-5" />
+                      <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type={showSignupPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="py-3.5 w-full rounded-xl border border-input bg-muted/50 pl-11 pr-12 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full rounded-xl border border-input bg-muted/50 py-3.5 pr-12 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
                       />
                       <button
                         type="button"
-                        onClick={() => setShowSignupPassword(!showSignupPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() =>
+                          setShowSignupPassword(!showSignupPassword)
+                        }
+                        className="absolute top-1/2 right-4 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {showSignupPassword ? (
                           <EyeOff className="h-5 w-5" />
@@ -227,11 +225,11 @@ export default function AuthPage() {
                       Confirm Password
                     </label>
                     <div className="group relative">
-                      <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary h-5 w-5" />
+                      <ShieldCheck className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                       <input
                         type="password"
                         placeholder="••••••••"
-                        className="py-3.5 w-full rounded-xl border border-input bg-muted/50 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full rounded-xl border border-input bg-muted/50 py-3.5 pr-4 pl-11 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                         required
                       />
                     </div>
@@ -244,7 +242,7 @@ export default function AuthPage() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="py-4 w-full rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-2"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
                     >
                       {isLoading ? (
                         <>
@@ -259,13 +257,22 @@ export default function AuthPage() {
                 </form>
 
                 <div className="mt-8 flex justify-center gap-6">
-                  <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <a
+                    href="#"
+                    className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                  >
                     Terms of Service
                   </a>
-                  <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <a
+                    href="#"
+                    className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                  >
                     Privacy Policy
                   </a>
-                  <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <a
+                    href="#"
+                    className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                  >
                     Help Center
                   </a>
                 </div>

@@ -44,6 +44,7 @@ export interface KanbanTask {
 export interface AppState {
     user: {
         name: string
+        password?: string
         plan: string
         xpLevel: number
         xpTitle: string
@@ -65,6 +66,7 @@ export interface AppState {
     kanbanTasks: KanbanTask[]
 
     // Actions
+    updateUser: (data: Partial<AppState["user"]>) => void
     completeTask: (taskId: string) => void
     addFocusSession: (hours: number) => void
     moveKanbanTask: (taskId: string, newStatus: KanbanTask["status"]) => void
