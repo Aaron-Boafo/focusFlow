@@ -12,9 +12,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUser = useCallback(async () => {
     try {
       const userData = await ApiService.getUser<AuthUser>()
+      
+      // Update auth state immediately
+      useAuthStore.setState({ user: userData, isAuthenticated: true })
+      
       // For authenticated users, we enforce wait for migration/sync
       await migrateGuestData()
-      useAuthStore.setState({ user: userData, isAuthenticated: true, isLoading: false })
+      
+      // Finally mark loading as over
+      useAuthStore.setState({ isLoading: false })
     } catch (error) {
       // If fetching user fails, we are likely a guest or session expired
       useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })

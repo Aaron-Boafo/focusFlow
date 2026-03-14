@@ -23,6 +23,12 @@ export async function migrateGuestData() {
     return;
   }
 
+  // Set initial loading states so UI components can show skeletons during sync
+  useProjectStore.setState({ isLoading: true });
+  useExpStore.setState({ isLoading: true });
+  SessionStore.setState({ isLoading: true });
+  useAppStore.setState({ isLoading: true });
+
   // Define migration tasks
   const syncProjectsTask = async () => {
     try {
@@ -35,16 +41,18 @@ export async function migrateGuestData() {
       
       const reconciledProjects = reconcileProjects(localProjects, serverProjects);
       
-      // Push to server
-      await server.saveData("focusflow-projects-storage", { 
+      // Update local store immediately for re-render
+      useProjectStore.setState({ projects: reconciledProjects, isLoading: false });
+
+      // Push to server in background
+      server.saveData("focusflow-projects-storage", { 
         state: { projects: reconciledProjects, isLoading: false },
         version: 1 
-      });
+      }).catch(err => console.error("Cloud push failed:", err));
       
-      // Update local store
-      useProjectStore.setState({ projects: reconciledProjects, isLoading: false });
     } catch (error) {
       console.error("Failed to migrate projects:", error);
+      useProjectStore.setState({ isLoading: false });
     }
   };
 
@@ -64,26 +72,29 @@ export async function migrateGuestData() {
       };
       
       const reconciled = reconcileExp(localState, serverState);
+      const level = calculateLevelFromExp(reconciled.totalExp);
       
-      // Push to server
-      await server.saveData("focusflow-exp-storage", {
+      // Update local store immediately
+      useExpStore.setState({ 
+        ...reconciled, 
+        level,
+        isLoading: false 
+      });
+
+      // Push to server in background
+      server.saveData("focusflow-exp-storage", {
         state: { 
           ...reconciled, 
-          level: calculateLevelFromExp(reconciled.totalExp),
+          level,
           dailyGoal: serverData?.state?.dailyGoal || 100,
           isLoading: false 
         },
         version: 1
-      });
+      }).catch(err => console.error("Cloud push failed:", err));
 
-      // Update local store
-      useExpStore.setState({ 
-        ...reconciled, 
-        level: calculateLevelFromExp(reconciled.totalExp),
-        isLoading: false 
-      });
     } catch (error) {
       console.error("Failed to migrate XP:", error);
+      useExpStore.setState({ isLoading: false });
     }
   };
 
@@ -98,23 +109,31 @@ export async function migrateGuestData() {
       
       const reconciledHistory = reconcileSessions(localHistory, serverHistory);
       
-      // Push to server
-      await server.saveData("focusflow-session-storage", {
-        state: { 
-          history: reconciledHistory, 
-          settings: serverData?.state?.settings || localData?.state?.settings,
-          isLoading: false 
-        },
-        version: 1
+      // Update local store immediately
+      SessionStore.setState({ 
+        history: reconciledHistory, 
+        isLoading: false,
+        settings: serverData?.state?.settings || localData?.state?.settings
       });
-
-      // Update local store
-      SessionStore.setState({ history: reconciledHistory, isLoading: false });
       
-      // Final sync for individual individual records (idempotent)
-      await SessionStore.getState().syncWithCloud();
+      // Individual record sync and cloud push
+      try {
+        await SessionStore.getState().syncWithCloud();
+        await server.saveData("focusflow-session-storage", {
+          state: { 
+            history: reconciledHistory, 
+            settings: serverData?.state?.settings || localData?.state?.settings,
+            isLoading: false 
+          },
+          version: 1
+        });
+      } catch (err) {
+        console.error("Session cloud push failed:", err);
+      }
+      
     } catch (error) {
       console.error("Failed to migrate sessions:", error);
+      SessionStore.setState({ isLoading: false });
     }
   };
 
@@ -127,10 +146,14 @@ export async function migrateGuestData() {
       if (serverData) {
         useAppStore.setState({ ...serverData.state, isLoading: false });
       } else if (localData) {
-        await server.saveData("focusflow-app-storage", localData);
+        useAppStore.setState({ isLoading: false });
+        await server.saveData("focusflow-app-storage", localData).catch(err => console.error("Cloud push failed:", err));
+      } else {
+        useAppStore.setState({ isLoading: false });
       }
     } catch (error) {
       console.error("Failed to sync app settings:", error);
+      useAppStore.setState({ isLoading: false });
     }
   };
 

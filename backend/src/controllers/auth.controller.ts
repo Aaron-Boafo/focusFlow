@@ -6,13 +6,18 @@ import { JWTConfig } from "../config/jwt.config";
 import { signupSchema, loginSchema } from "../utils/auth.validation";
 
 config({ quiet: true });
-const jwtConfig = new JWTConfig();
 
 export class AuthController {
+  private jwtConfig: JWTConfig;
+
+  constructor(jwtConfig: JWTConfig = new JWTConfig()) {
+    this.jwtConfig = jwtConfig;
+  }
+
   /**
    * Handles user signup.
    */
-  public static async signup(req: Request, res: Response): Promise<void> {
+  public signup = async (req: Request, res: Response): Promise<void> => {
     try {
       // 1. Validate request
       const { error, value } = signupSchema.validate(req.body);
@@ -49,12 +54,12 @@ export class AuthController {
       console.error("Signup error:", error);
       res.status(500).json({ status: "error", message: "Internal server error" });
     }
-  }
+  };
 
   /**
    * Handles user login.
    */
-  public static async login(req: Request, res: Response): Promise<void> {
+  public login = async (req: Request, res: Response): Promise<void> => {
     try {
       // 1. Validate request
       const { error, value } = loginSchema.validate(req.body);
@@ -85,23 +90,11 @@ export class AuthController {
 
       // 4. Generate Tokens
       const payload = { email: userData?.email, uid: email };
-      const accessToken = jwtConfig.signAccessToken(payload);
-      const refreshToken = jwtConfig.signRefreshToken(payload);
+      const accessToken = this.jwtConfig.signAccessToken(payload);
+      const refreshToken = this.jwtConfig.signRefreshToken(payload);
 
       // 5. Set Cookies
-      res.cookie("access_token", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 15 * 60 * 1000, // 15 mins
-      });
-
-      res.cookie("refresh_token", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+      this.setTokenCookies(res, accessToken, refreshToken);
 
       res.status(200).json({
         status: "success",
@@ -115,12 +108,12 @@ export class AuthController {
       console.error("Login error:", error);
       res.status(500).json({ status: "error", message: "Internal server error" });
     }
-  }
+  };
 
   /**
    * Handles token refresh.
    */
-  public static async refresh(req: Request, res: Response): Promise<void> {
+  public refresh = async (req: Request, res: Response): Promise<void> => {
     try {
       const refreshToken = req.cookies["refresh_token"];
 
@@ -132,7 +125,7 @@ export class AuthController {
       // Verify Refresh Token
       let decoded: any;
       try {
-        decoded = jwtConfig.verifyRefreshToken(refreshToken);
+        decoded = this.jwtConfig.verifyRefreshToken(refreshToken);
       } catch (error) {
         res.status(401).json({ status: "error", message: "Invalid or expired refresh token" });
         return;
@@ -140,15 +133,10 @@ export class AuthController {
 
       // Issue new Access Token
       const payload = { email: decoded.email, uid: decoded.uid };
-      const newAccessToken = jwtConfig.signAccessToken(payload);
+      const newAccessToken = this.jwtConfig.signAccessToken(payload);
 
       // Set Cookie
-      res.cookie("access_token", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 15 * 60 * 1000, // 15 mins
-      });
+      this.setTokenCookies(res, newAccessToken);
 
       res.status(200).json({
         status: "success",
@@ -158,12 +146,12 @@ export class AuthController {
       console.error("Refresh error:", error);
       res.status(500).json({ status: "error", message: "Internal server error" });
     }
-  }
+  };
 
   /**
    * Fetches current user data.
    */
-  public static async getMe(req: Request, res: Response): Promise<void> {
+  public getMe = async (req: Request, res: Response): Promise<void> => {
     try {
       const user = (req as any).user;
       if (!user) {
@@ -190,14 +178,45 @@ export class AuthController {
       console.error("GetMe error:", error);
       res.status(500).json({ status: "error", message: "Internal server error" });
     }
-  }
+  };
 
   /**
    * Handles user logout.
    */
-  public static async logout(req: Request, res: Response): Promise<void> {
-    res.clearCookie("access_token");
-    res.clearCookie("refresh_token");
+  public logout = async (req: Request, res: Response): Promise<void> => {
+    res.clearCookie("access_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
+    res.clearCookie("refresh_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
     res.status(200).json({ status: "success", message: "Logged out successfully" });
+  };
+
+  /**
+   * Helper to set secure HttpOnly cookies for tokens.
+   */
+  private setTokenCookies(res: Response, accessToken: string, refreshToken?: string): void {
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true, // Always true for production/security enforcement
+      sameSite: "strict" as const,
+    };
+
+    res.cookie("access_token", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, // 15 mins
+    });
+
+    if (refreshToken) {
+      res.cookie("refresh_token", refreshToken, {
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+    }
   }
 }

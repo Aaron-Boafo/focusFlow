@@ -16,14 +16,17 @@ export const useAuthStore = create<IAuthStore>()(
         try {
           const response = await ApiService.post<AuthResponse>("/auth/login", { email, password })
           
-          // Trigger migration and sync before finishing login state
-          await migrateGuestData()
-
+          // Set authentication state immediately so migration knows we are authenticated
           set({ 
             user: response.user, 
-            isAuthenticated: true, 
-            isLoading: false 
+            isAuthenticated: true 
           })
+
+          // Trigger migration and sync
+          await migrateGuestData()
+
+          // Mark as done loading
+          set({ isLoading: false })
         } catch (error: any) {
           set({ isLoading: false })
           throw new Error(error.response?.data?.message || "Login failed")

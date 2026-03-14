@@ -62,6 +62,12 @@ export default function OverviewPage() {
   const expForNext = getExpForNextLevel(level)
   const xpProgress = Math.round((expInLevel / expForNext) * 100)
   const xpToNext = expForNext - expInLevel
+  const greeting = (() => {
+    const hour = new Date().getHours()
+    if (hour < 12) return "Good morning"
+    if (hour < 18) return "Good afternoon"
+    return "Good evening"
+  })()
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 p-4 md:p-8">
@@ -69,7 +75,7 @@ export default function OverviewPage() {
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
           <h3 className="text-2xl font-bold">
-            Good morning, {isAuthenticated ? (authUser?.displayName || "User") : "Guest"}!
+            {greeting}, {isAuthenticated ? (authUser?.displayName || "User") : "Guest"}!
           </h3>
           <p className="text-muted-foreground">
             Ready to crush your goals today?
