@@ -1,61 +1,54 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { IAuthStore } from "@/types"
+import { ApiService } from "@/services/apiService"
+import type { IAuthStore, AuthResponse } from "@/types"
 import { migrateGuestData } from "@/lib/migration"
 
 export const useAuthStore = create<IAuthStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       isLoading: false,
 
-      login: async (email, _pass) => {
+      login: async (email, password) => {
         set({ isLoading: true })
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        
-        // Mock successful login
-        const mockUser = {
-          id: crypto.randomUUID(),
-          email,
-          name: email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1),
-        }
-        
-        set({ 
-          user: mockUser, 
-          isAuthenticated: true, 
-          isLoading: false 
-        })
+        try {
+          const response = await ApiService.post<AuthResponse>("/auth/login", { email, password })
+          
+          // Trigger migration and sync before finishing login state
+          await migrateGuestData()
 
-        // Trigger migration
-        await migrateGuestData()
+          set({ 
+            user: response.user, 
+            isAuthenticated: true, 
+            isLoading: false 
+          })
+        } catch (error: any) {
+          set({ isLoading: false })
+          throw new Error(error.response?.data?.message || "Login failed")
+        }
       },
 
-      signup: async (name, email, _pass) => {
+      signup: async (name, email, password) => {
         set({ isLoading: true })
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        
-        const mockUser = {
-          id: crypto.randomUUID(),
-          email,
-          name,
+        try {
+          await ApiService.post<{ status: string }>("/auth/signup", { displayName: name, email, password })
+          // After signup, we log them in
+          await get().login(email, password)
+        } catch (error: any) {
+          set({ isLoading: false })
+          throw new Error(error.response?.data?.message || "Signup failed")
         }
-        
-        set({ 
-          user: mockUser, 
-          isAuthenticated: true, 
-          isLoading: false 
-        })
-
-        // Trigger migration
-        await migrateGuestData()
       },
 
-      logout: () => {
+      logout: async () => {
+        try {
+          await ApiService.post("/auth/logout", {})
+        } catch (err) {
+          console.error("Logout error:", err)
+        }
         set({ user: null, isAuthenticated: false })
-        // Note: Strategy will switch back to local on next access
       },
 
       skipToDemo: () => {
@@ -65,6 +58,10 @@ export const useAuthStore = create<IAuthStore>()(
     {
       name: "focusflow-auth-storage",
       version: 1,
+      partialize: (state) => ({ 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated 
+      }),
     }
   )
 )

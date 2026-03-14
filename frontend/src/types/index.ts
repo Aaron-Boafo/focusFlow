@@ -107,15 +107,16 @@ export interface ISessionStore {
     focusHoursGrowth: string
     totalStreakDays: number
   }
+  syncWithCloud: () => Promise<void>
 }
 
 // --- Auth Types ---
 export interface AuthUser {
-  id: string
   email: string
-  name: string
+  displayName: string
   avatar?: string
   plan?: string
+  createdAt?: string
 }
 
 export interface IAuthStore {
@@ -129,8 +130,9 @@ export interface IAuthStore {
 }
 
 export interface AuthResponse {
+  status: string
+  message?: string
   user: AuthUser
-  //accessToken: string (handled by cookies)
 }
 
 export interface AuthContextType {

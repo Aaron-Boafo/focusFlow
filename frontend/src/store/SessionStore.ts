@@ -1,7 +1,9 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { createZustandStorage } from "@/services/storageService"
+import { SessionService } from "@/services/sessionService"
 import type { ISessionStore, Session } from "@/types"
+import { useAuthStore } from "./AuthStore"
 
 export const SessionStore = create<ISessionStore>()(
   persist(
@@ -30,6 +32,11 @@ export const SessionStore = create<ISessionStore>()(
           date: new Date().toISOString().split("T")[0],
         }
         set((state) => ({ history: [...state.history, newSession] }))
+        
+        if (useAuthStore.getState().isAuthenticated) {
+          SessionService.createSession(newSession).catch(err => console.error("Sync error:", err))
+        }
+        
         return id
       },
 
@@ -39,6 +46,10 @@ export const SessionStore = create<ISessionStore>()(
             s.id === id ? { ...s, elapsedTime, status } : s
           ),
         }))
+
+        if (useAuthStore.getState().isAuthenticated) {
+          SessionService.updateSession(id, { elapsedTime, status }).catch(err => console.error("Sync error:", err))
+        }
       },
 
       completeSession: (id) => {
@@ -67,7 +78,17 @@ export const SessionStore = create<ISessionStore>()(
 
       setActiveSession: (id) => set({ activeSessionId: id }),
 
-      setPaused: (paused) => set({ isPaused: paused }),
+      setPaused: (paused) => {
+        set({ isPaused: paused })
+        const { activeSessionId, history } = get()
+        if (activeSessionId && useAuthStore.getState().isAuthenticated) {
+          const session = history.find(s => s.id === activeSessionId)
+          if (session) {
+             SessionService.updateSession(activeSessionId, { elapsedTime: session.elapsedTime, status: session.status })
+               .catch(err => console.error("Sync error:", err))
+          }
+        }
+      },
 
       tick: () => {
         const { activeSessionId, isPaused, history, settings } = get()
@@ -101,6 +122,11 @@ export const SessionStore = create<ISessionStore>()(
               s.id === activeSessionId ? { ...s, exp: xpEarned } : s
             )
           }))
+
+          if (useAuthStore.getState().isAuthenticated) {
+             SessionService.updateSession(activeSessionId, { status: "complete", elapsedTime: session.duration, exp: xpEarned })
+               .catch(err => console.error("Sync error:", err))
+          }
           
           import('./ExpStore').then(module => {
             module.useExpStore.getState().addExp(xpEarned)
@@ -125,6 +151,12 @@ export const SessionStore = create<ISessionStore>()(
               get().setActiveSession(newId)
             }, 1000)
           }
+        }
+
+        // Periodic Sync (Every 30 ticks)
+        if (newElapsedTime % 30 === 0 && useAuthStore.getState().isAuthenticated) {
+           SessionService.updateSession(activeSessionId, { elapsedTime: newElapsedTime, status: "progress" })
+             .catch(err => console.error("Periodic sync error:", err))
         }
       },
 
@@ -203,6 +235,18 @@ export const SessionStore = create<ISessionStore>()(
         const totalStreakDays = getStreakDays()
 
         return { focusHours, streak, rank, sessionsGrowth, focusHoursGrowth, totalStreakDays }
+      },
+
+      syncWithCloud: async () => {
+        const { history } = get()
+        if (history.length > 0 && useAuthStore.getState().isAuthenticated) {
+          try {
+            await SessionService.syncSessions(history)
+            console.log("Sessions synced with cloud successfully")
+          } catch (error) {
+            console.error("Failed to sync sessions with cloud:", error)
+          }
+        }
       },
     }),
     {

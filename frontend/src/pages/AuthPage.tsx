@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import { Navbar } from "@/components/LandingSections"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/context/AuthContext"
-import { useAppStore } from "@/store/useAppStore"
 import { loginSchema, signupSchema } from "@/lib/schemas"
 import { toast } from "sonner"
 import {
@@ -27,7 +26,6 @@ export default function AuthPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { login, signup, isLoading } = useAuth()
-  const { updateUser } = useAppStore()
 
   const mode = searchParams.get("mode") || "login"
 
@@ -60,14 +58,10 @@ export default function AuthPage() {
 
     try {
       await login(loginEmail, loginPass)
-      const name =
-        loginEmail.split("@")[0].charAt(0).toUpperCase() +
-        loginEmail.split("@")[0].slice(1)
-      updateUser({ name })
-      toast.success(`Welcome back, ${name}!`, { id: toastId })
+      toast.success(`Welcome back!`, { id: toastId })
       navigate("/dashboard")
-    } catch (error) {
-      toast.error("Login failed. Please check your credentials.", {
+    } catch (error: any) {
+      toast.error(error.message || "Login failed. Please check your credentials.", {
         id: toastId,
       })
     }
@@ -93,13 +87,12 @@ export default function AuthPage() {
 
     try {
       await signup(signupName, signupEmail, signupPass)
-      updateUser({ name: signupName })
       toast.success("Account created successfully! Welcome aboard.", {
         id: toastId,
       })
       navigate("/dashboard")
-    } catch (error) {
-      toast.error("Signup failed. Please try again.", { id: toastId })
+    } catch (error: any) {
+      toast.error(error.message || "Signup failed. Please try again.", { id: toastId })
     }
   }
 
@@ -241,12 +234,14 @@ export default function AuthPage() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-center gap-2 py-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <p className="text-[13px] text-muted-foreground">
-                      Redirecting to Dashboard upon success
-                    </p>
-                  </div>
+                  {isLoading && (
+                    <div className="flex items-center justify-center gap-2 py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <p className="text-[13px] text-muted-foreground">
+                        Authenticating...
+                      </p>
+                    </div>
+                  )}
                 </form>
               </div>
             </TabsContent>

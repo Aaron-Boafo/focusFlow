@@ -2,7 +2,7 @@ import axios, { type AxiosInstance } from "axios";
 
 export class ApiService {
   private static api: AxiosInstance = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: "http://localhost:3000/api",
     headers: {
       "Content-Type": "application/json",
     },
@@ -45,7 +45,7 @@ export class ApiService {
             await this.post("/auth/refresh", {});
             this.isRefreshing = false;
             this.onRefreshed("refreshed"); // dummy signal
-            
+
             return this.api(originalRequest);
           } catch (refreshError) {
             this.isRefreshing = false;
@@ -60,7 +60,8 @@ export class ApiService {
   }
 
   static async getUser<T>(): Promise<T> {
-    return this.get<T>("/auth/me");
+    const response = await this.get<{ status: string; user: T }>("/auth/me");
+    return response.user;
   }
 
   static async get<T>(endpoint: string): Promise<T> {

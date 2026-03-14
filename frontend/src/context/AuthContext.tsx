@@ -1,83 +1,52 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
+import React, { createContext, useContext, useEffect, useCallback } from "react"
 import { ApiService } from "@/services/apiService"
-import type { AuthUser, AuthContextType, AuthResponse } from "@/types"
+import { useAuthStore } from "@/store/AuthStore"
+import { migrateGuestData } from "@/lib/migration"
+import type { AuthContextType, AuthUser } from "@/types"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const { user, isAuthenticated, isLoading, login, signup, logout } = useAuthStore()
 
   const fetchUser = useCallback(async () => {
     try {
-      const data = await ApiService.getUser<AuthUser>()
-      setUser(data)
-      setIsAuthenticated(true)
+      const userData = await ApiService.getUser<AuthUser>()
+      // For authenticated users, we enforce wait for migration/sync
+      await migrateGuestData()
+      useAuthStore.setState({ user: userData, isAuthenticated: true, isLoading: false })
     } catch (error) {
-      setUser(null)
-      setIsAuthenticated(false)
-    } finally {
-      setIsLoading(false)
+      // If fetching user fails, we are likely a guest or session expired
+      useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })
     }
   }, [])
 
   const refresh = useCallback(async () => {
+    // Only set loading if we previously though we were authenticated (rehydration from storage)
+    // Otherwise, let guests start immediately while we check in background
+    const wasAuthenticated = useAuthStore.getState().isAuthenticated;
+    if (wasAuthenticated) {
+      useAuthStore.setState({ isLoading: true });
+    }
+
     try {
       await ApiService.post("/auth/refresh", {})
       await fetchUser()
-    } catch (error) {
-      setUser(null)
-      setIsAuthenticated(false)
-      setIsLoading(false)
+    } catch (error: any) {
+      // Silently fail for 401s - user is a guest
+      useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })
     }
   }, [fetchUser])
 
   useEffect(() => {
     ApiService.setupInterceptors(() => {
-      setUser(null)
-      setIsAuthenticated(false)
+      useAuthStore.setState({ user: null, isAuthenticated: false })
     })
   }, [])
 
   useEffect(() => {
     refresh()
   }, [refresh])
-
-  const login = async (email: string, pass: string) => {
-    setIsLoading(true)
-    try {
-      await ApiService.post<AuthResponse>("/auth/login", { email, password: pass })
-      await fetchUser()
-    } catch (error) {
-      throw error
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const signup = async (name: string, email: string, pass: string) => {
-    setIsLoading(true)
-    try {
-      await ApiService.post<AuthResponse>("/auth/signup", { name, email, password: pass })
-      await fetchUser()
-    } catch (error) {
-      throw error
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const logout = async () => {
-    try {
-      await ApiService.post("/auth/logout", {})
-    } catch (error) {
-      console.error("Logout failed", error)
-    } finally {
-      setUser(null)
-      setIsAuthenticated(false)
-    }
-  }
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, signup, logout, refresh, fetchUser }}>

@@ -15,8 +15,10 @@ export default function OverviewPage() {
   const { user: authUser, isAuthenticated } = useAuth()
   const { isLoading: appLoading } = useAppStore()
   const { projects, isLoading: projectsLoading } = useProjectStore()
-  const { isLoading: expLoading } = useExpStore()
-  const { isLoading: sessionLoading } = SessionStore()
+  const expStore = useExpStore()
+  const { isLoading: expLoading, level, getExpForNextLevel, getExpSinceLastLevel, getXpTitle, streak, getWeeklyStatus } = expStore
+  const sessionStore = SessionStore()
+  const { isLoading: sessionLoading, getTodayStats } = sessionStore
 
   if (appLoading || projectsLoading || expLoading || sessionLoading) {
     return <DashboardSkeleton />
@@ -25,15 +27,7 @@ export default function OverviewPage() {
   const upcomingProjects = projects
     .filter((p) => p.status !== "Completed")
     .slice(0, 3)
-  const {
-    level,
-    getExpForNextLevel,
-    getExpSinceLastLevel,
-    getXpTitle,
-    streak,
-    getWeeklyStatus,
-  } = useExpStore()
-  const { getTodayStats } = SessionStore()
+
   const sessionStats = getTodayStats()
   const weeklyStatus = getWeeklyStatus()
 
@@ -75,7 +69,7 @@ export default function OverviewPage() {
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
           <h3 className="text-2xl font-bold">
-            Good morning, {isAuthenticated ? (authUser?.name || "User") : "Guest"}!
+            Good morning, {isAuthenticated ? (authUser?.displayName || "User") : "Guest"}!
           </h3>
           <p className="text-muted-foreground">
             Ready to crush your goals today?
