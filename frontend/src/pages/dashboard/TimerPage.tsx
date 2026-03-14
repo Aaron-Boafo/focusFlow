@@ -2,14 +2,17 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Trophy, RotateCcw, Play, SkipForward, Pause } from "lucide-react"
 import { SessionStore } from "@/store/SessionStore"
+import { useAuth } from "@/context/AuthContext"
 import type { SessionType } from "@/types"
 import { TimerSkeleton } from "@/components/skeletons/TimerSkeleton"
 
 export default function TimerPage() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   
   // Use selectors for performance and safety
   const settings = SessionStore((state) => state.settings)
+  const updateSettings = SessionStore((state) => state.updateSettings)
   const activeSessionId = SessionStore((state) => state.activeSessionId)
   const history = SessionStore((state) => state.history)
   const isPaused = SessionStore((state) => state.isPaused)
@@ -17,7 +20,26 @@ export default function TimerPage() {
   const getTodayStats = SessionStore((state) => state.getTodayStats)
   const resetActiveSession = SessionStore((state) => state.resetActiveSession)
   const endSession = SessionStore((state) => state.endSession)
+  const setActiveSession = SessionStore((state) => state.setActiveSession)
   const isLoading = SessionStore((state) => state.isLoading)
+
+  // 1. Initial Load: Fetch settings from Cloud if authenticated
+  useEffect(() => {
+    const fetchCloudSettings = async () => {
+      if (isAuthenticated) {
+        try {
+          const { ApiService } = await import("@/services/apiService")
+          const cloudSettings = await ApiService.get<any>("/storage/settings")
+          if (cloudSettings) {
+            updateSettings(cloudSettings)
+          }
+        } catch (error) {
+          console.error("Failed to load cloud settings on TimerPage:", error)
+        }
+      }
+    }
+    fetchCloudSettings()
+  }, [isAuthenticated, updateSettings])
 
   if (isLoading) return <TimerSkeleton />
 
@@ -90,6 +112,54 @@ export default function TimerPage() {
           </button>
         ))}
       </div>
+
+      {/* Last Session / Resume Session Card */}
+      {history.length > 0 && (
+        <div className="mb-12 w-full max-w-lg">
+          {(() => {
+            const lastSession = history[history.length - 1]
+            const isResumable = lastSession.status === "progress" && lastSession.elapsedTime < lastSession.duration
+            const timeAgo = new Date(lastSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            
+            return (
+              <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/50 p-6 backdrop-blur-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${isResumable ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" : "bg-primary/10 text-primary"}`}>
+                      {lastSession.type === "Focus" ? <Trophy className="h-6 w-6" /> : <RotateCcw className="h-6 w-6" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+                        Most Recent Session
+                      </p>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">
+                        {lastSession.type} • {timeAgo}
+                      </h4>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${isResumable ? "animate-pulse bg-amber-500" : "bg-green-500"}`}></span>
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          {isResumable ? "Interrupted" : "Completed"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {isResumable && (
+                    <button
+                      onClick={() => {
+                        setActiveSession(lastSession.id)
+                        navigate(`/focus?minutes=${lastSession.duration / 60}&type=${lastSession.type}`)
+                      }}
+                      className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95"
+                    >
+                      Resume
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )}
 
       {/* Main Timer Display */}
       <div className="relative group">

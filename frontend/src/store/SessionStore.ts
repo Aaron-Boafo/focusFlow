@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { createZustandStorage } from "@/services/storageService"
 import { SessionService } from "@/services/sessionService"
+import { timerSyncService } from "@/services/timerSyncService"
 import type { ISessionStore, Session } from "@/types"
 import { useAuthStore } from "./AuthStore"
 
@@ -33,6 +34,9 @@ export const SessionStore = create<ISessionStore>()(
         }
         set((state) => ({ history: [...state.history, newSession] }))
         
+        // Claim leadership when starting a session
+        timerSyncService.becomeLeader()
+
         if (useAuthStore.getState().isAuthenticated) {
           SessionService.createSession(newSession).catch(err => console.error("Sync error:", err))
         }
@@ -112,8 +116,14 @@ export const SessionStore = create<ISessionStore>()(
           ),
         }))
 
-        // Handle Completion Side Effects
-        if (isComplete) {
+        // Broadcast current state to other tabs
+        const updatedSession = get().history.find(s => s.id === activeSessionId)
+        if (updatedSession) {
+          timerSyncService.broadcastTick(activeSessionId, newElapsedTime, updatedSession.status)
+        }
+
+        // Handle Completion Side Effects (ONLY IF LEADER)
+        if (isComplete && timerSyncService.getIsLeader()) {
           // 0. Award XP
           const xpEarned = Math.floor(session.duration / 60) // 1 XP per minute focused
           

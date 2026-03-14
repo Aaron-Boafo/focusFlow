@@ -25,16 +25,18 @@ export default function SettingsPage() {
   const { isLoading: sessionLoading } = SessionStore()
 
   if (appLoading || sessionLoading) return <SettingsSkeleton />
-  
-  const displayName = isAuthenticated ? (authUser?.displayName || "User") : "Guest"
-  
+
+  const displayName = isAuthenticated
+    ? authUser?.displayName || "User"
+    : "Guest"
+
   // Account modal state
   const [userName, setUserName] = useState(displayName)
   const [userPassword, setUserPassword] = useState(user.password || "")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const getInitials = (name: string) => {
-    if (!name) return "GS"
+    if (!name || name === "Guest") return "GS"
     return name
       .split(" ")
       .map((n) => n[0])
@@ -43,10 +45,19 @@ export default function SettingsPage() {
       .slice(0, 2)
   }
 
+  // Update userName when displayName changes (e.g. after auth loads)
+  useEffect(() => {
+    setUserName(displayName)
+  }, [displayName])
+
+
   const handleUpdateAccount = () => {
     // Zod validation
-    const result = accountUpdateSchema.safeParse({ name: userName, password: userPassword })
-    
+    const result = accountUpdateSchema.safeParse({
+      name: userName,
+      password: userPassword,
+    })
+
     if (!result.success) {
       toast.error(result.error.issues[0].message)
       return
@@ -57,8 +68,6 @@ export default function SettingsPage() {
     setIsDialogOpen(false)
   }
 
-
-  
   // Use selectors for better reactivity
   const settings = SessionStore((state) => state.settings)
   const updateSettings = SessionStore((state) => state.updateSettings)
@@ -77,10 +86,28 @@ export default function SettingsPage() {
   const [autoBreakEnabled, setAutoBreakEnabled] = useState(
     settings.autoStartBreaks ?? false
   )
-  
+
   const { theme, setTheme } = useTheme()
 
-  // Sync local state when settings change (e.g. from storage load)
+  // 1. Initial Load: Fetch settings from Cloud if authenticated
+  useEffect(() => {
+    const fetchCloudSettings = async () => {
+      if (isAuthenticated) {
+        try {
+          const { ApiService } = await import("@/services/apiService")
+          const cloudSettings = await ApiService.get<any>("/storage/settings")
+          if (cloudSettings) {
+            updateSettings(cloudSettings)
+          }
+        } catch (error) {
+          console.error("Failed to load cloud settings:", error)
+        }
+      }
+    }
+    fetchCloudSettings()
+  }, [isAuthenticated, updateSettings])
+
+  // 2. Sync local state when settings change (e.g. from storage load or cloud fetch)
   useEffect(() => {
     setPomodoroLength(settings.focus / 60)
     setShortBreakLength(settings.shortBreak / 60)
@@ -89,15 +116,29 @@ export default function SettingsPage() {
     setAutoBreakEnabled(settings.autoStartBreaks ?? false)
   }, [settings])
 
-  const handleSave = () => {
-    updateSettings({
+  const handleSave = async () => {
+    const newSettings = {
       focus: pomodoroLength * 60,
       shortBreak: shortBreakLength * 60,
       longBreak: longBreakLength * 60,
       desktopNotifications: desktopEnabled,
       autoStartBreaks: autoBreakEnabled,
-    })
-    toast("Settings updated successfully!")
+    }
+
+    updateSettings(newSettings)
+
+    if (isAuthenticated) {
+      try {
+        const { ApiService } = await import("@/services/apiService")
+        await ApiService.post("/storage/settings", newSettings)
+        toast.success("Settings saved and synced to cloud!")
+      } catch (error) {
+        console.error("Settings sync error:", error)
+        toast.error("Settings saved locally, but cloud sync failed.")
+      }
+    } else {
+      toast.success("Settings updated locally!")
+    }
   }
 
   const handleDiscard = () => {
@@ -110,10 +151,24 @@ export default function SettingsPage() {
 
   const handleToggleDesktop = () => {
     const nextState = !desktopEnabled
-    setDesktopEnabled(nextState)
+    
+    // If turning ON, check/request permissions
     if (nextState && "Notification" in window) {
-      Notification.requestPermission()
+      if (Notification.permission === "denied") {
+        toast.error("Notifications are blocked by your browser settings")
+        return
+      }
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          setDesktopEnabled(true)
+        } else {
+          toast.error("Notification permission was not granted")
+        }
+      })
+      return // Wait for permission result
     }
+    
+    setDesktopEnabled(nextState)
   }
 
   return (
@@ -243,23 +298,24 @@ export default function SettingsPage() {
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {/* Desktop Notifications */}
-            <div className="flex items-center justify-between p-6">
-              <div className="flex flex-col">
-                <p className="text-sm font-medium text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between p-6 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+              <label htmlFor="desktop-notifs" className="flex flex-1 cursor-pointer flex-col">
+                <span className="text-sm font-medium text-slate-900 dark:text-white">
                   Desktop Notifications
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   Receive alerts when session ends
-                </p>
-              </div>
+                </span>
+              </label>
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
+                  id="desktop-notifs"
                   type="checkbox"
                   className="peer sr-only"
                   checked={desktopEnabled}
                   onChange={handleToggleDesktop}
                 />
-                <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-slate-700"></div>
+                <div className="h-6 w-11 rounded-full bg-slate-200 transition-all peer-checked:bg-primary peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:outline-none dark:bg-slate-700 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:after:border-slate-500"></div>
               </label>
             </div>
 
@@ -332,30 +388,32 @@ export default function SettingsPage() {
           </div>
           <div className="p-6">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-4">
-              <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-1">
+              <div className="flex flex-col items-center gap-4 sm:flex-1 sm:flex-row">
                 <div className="group relative">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-primary/10 text-xl font-bold text-primary dark:border-slate-700">
-                    {getInitials(isAuthenticated ? (authUser?.displayName || "User") : "Guest")}
+                    {getInitials(
+                      isAuthenticated
+                        ? authUser?.displayName || "User"
+                        : "Guest"
+                    )}
                   </div>
                   <button className="absolute right-0 bottom-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
                     <Edit2 className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="text-center sm:text-left font-bold text-slate-900 dark:text-white">
-                  <p>
-                    {displayName}
-                  </p>
+                <div className="text-center font-bold text-slate-900 sm:text-left dark:text-white">
+                  <p>{displayName}</p>
                   <p className="text-sm font-normal text-slate-500 dark:text-slate-400">
                     {isAuthenticated ? authUser?.email : "guest@focusflow.demo"}
                   </p>
                 </div>
               </div>
-              
+
               <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogTrigger asChild>
-                  <button 
+                  <button
                     disabled={!isAuthenticated}
-                    className="w-full sm:w-auto rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto dark:border-slate-700 dark:hover:bg-slate-800"
                   >
                     Manage Account
                   </button>
@@ -363,30 +421,35 @@ export default function SettingsPage() {
                 <AlertDialogContent className="sm:max-w-[425px]">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="flex items-center gap-2">
-                       <User className="h-5 w-5 text-primary" />
-                       Update Profile
+                      <User className="h-5 w-5 text-primary" />
+                      Update Profile
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Update your personal information below. Changes will be saved to your local session.
+                      Update your personal information below. Changes will be
+                      saved to your local session.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  
+
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <label htmlFor="name" className="text-sm font-medium">Full Name</label>
-                      <Input 
-                        id="name" 
-                        value={userName} 
+                      <label htmlFor="name" className="text-sm font-medium">
+                        Full Name
+                      </label>
+                      <Input
+                        id="name"
+                        value={userName}
                         onChange={(e) => setUserName(e.target.value)}
                         placeholder="Enter your full name"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <label htmlFor="pass" className="text-sm font-medium">New Password (optional)</label>
-                      <Input 
-                        id="pass" 
+                      <label htmlFor="pass" className="text-sm font-medium">
+                        New Password (optional)
+                      </label>
+                      <Input
+                        id="pass"
                         type="password"
-                        value={userPassword} 
+                        value={userPassword}
                         onChange={(e) => setUserPassword(e.target.value)}
                         placeholder="Enter new password"
                       />
@@ -397,7 +460,7 @@ export default function SettingsPage() {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <button
                       onClick={handleUpdateAccount}
-                      className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                      className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
                     >
                       Save Changes
                     </button>
