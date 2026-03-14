@@ -1,5 +1,5 @@
 import { ApiService } from "./apiService";
-import type { Session, SessionStatus } from "@/types";
+import type { Session } from "@/types";
 
 export class SessionService {
   private static baseURL = "/sessions";

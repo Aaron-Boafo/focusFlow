@@ -26,7 +26,7 @@ export default function SettingsPage() {
 
   if (appLoading || sessionLoading) return <SettingsSkeleton />
   
-  const displayName = isAuthenticated ? (authUser?.name || "User") : "Guest"
+  const displayName = isAuthenticated ? (authUser?.displayName || "User") : "Guest"
   
   // Account modal state
   const [userName, setUserName] = useState(displayName)
@@ -335,7 +335,7 @@ export default function SettingsPage() {
               <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-1">
                 <div className="group relative">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-primary/10 text-xl font-bold text-primary dark:border-slate-700">
-                    {getInitials(isAuthenticated ? (authUser?.name || "User") : "Guest")}
+                    {getInitials(isAuthenticated ? (authUser?.displayName || "User") : "Guest")}
                   </div>
                   <button className="absolute right-0 bottom-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
                     <Edit2 className="h-3 w-3" />

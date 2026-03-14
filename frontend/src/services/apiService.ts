@@ -2,7 +2,7 @@ import axios, { type AxiosInstance } from "axios";
 
 export class ApiService {
   private static api: AxiosInstance = axios.create({
-    baseURL: "http://localhost:3000/api",
+    baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
     headers: {
       "Content-Type": "application/json",
     },
