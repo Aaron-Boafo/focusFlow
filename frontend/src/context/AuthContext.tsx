@@ -6,30 +6,38 @@ import type { AuthContextType, AuthUser } from "@/types"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated, isLoading, login, signup, logout } = useAuthStore()
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { user, isAuthenticated, isLoading, login, signup, logout } =
+    useAuthStore()
 
   const fetchUser = useCallback(async () => {
     try {
       const userData = await ApiService.getUser<AuthUser>()
-      
+
       // Update auth state immediately
       useAuthStore.setState({ user: userData, isAuthenticated: true })
-      
+
       // For authenticated users, we enforce wait for migration/sync
-      await migrateGuestData()
-      
-      // Finally mark loading as over
-      useAuthStore.setState({ isLoading: false })
-    } catch (error) {
+      try {
+        await migrateGuestData()
+      } catch (migrationError) {
+        console.error("Migration failed:", migrationError)
+        // Continue anyway - migration failures shouldn't block the app
+      }
+    } catch (error: any) {
       // If fetching user fails, we are likely a guest or session expired
-      useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })
+      useAuthStore.setState({ user: null, isAuthenticated: false })
+    } finally {
+      // ALWAYS clear loading state, regardless of success or failure
+      useAuthStore.setState({ isLoading: false })
     }
   }, [])
 
   const refresh = useCallback(async () => {
     // Explicitly start loading
-    useAuthStore.setState({ isLoading: true });
+    useAuthStore.setState({ isLoading: true })
 
     try {
       // First try to refresh the session cookie
@@ -38,21 +46,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await fetchUser()
     } catch (error: any) {
       // If ANY part fails, we are definitely a guest
-      useAuthStore.setState({ 
-        user: null, 
+      useAuthStore.setState({
+        user: null,
         isAuthenticated: false,
-        isLoading: false 
+        isLoading: false,
       })
     } finally {
       // Final guard to ensure we NEVER stay stuck in a loading state
-      useAuthStore.setState({ isLoading: false });
+      useAuthStore.setState({ isLoading: false })
     }
   }, [fetchUser])
 
   useEffect(() => {
     ApiService.setupInterceptors(() => {
       // CLEAR LOADING state here too, otherwise guards stay stuck in skeleton
-      useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })
+      useAuthStore.setState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+      })
     })
   }, [])
 
@@ -61,7 +73,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [refresh])
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, signup, logout, refresh, fetchUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        signup,
+        logout,
+        refresh,
+        fetchUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

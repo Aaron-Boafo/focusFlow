@@ -14,34 +14,47 @@ export const useAuthStore = create<IAuthStore>()(
       login: async (email, password) => {
         set({ isLoading: true })
         try {
-          const response = await ApiService.post<AuthResponse>("/auth/login", { email, password })
-          
+          const response = await ApiService.post<AuthResponse>("/auth/login", {
+            email,
+            password,
+          })
+
           // Set authentication state immediately so migration knows we are authenticated
-          set({ 
-            user: response.user, 
-            isAuthenticated: true 
+          set({
+            user: response.user,
+            isAuthenticated: true,
           })
 
           // Trigger migration and sync
-          await migrateGuestData()
-
-          // Mark as done loading
-          set({ isLoading: false })
+          try {
+            await migrateGuestData()
+          } catch (migrationError) {
+            console.error("Migration failed:", migrationError)
+            // Continue anyway - migration failures shouldn't block the app
+          }
         } catch (error: any) {
-          set({ isLoading: false })
           throw new Error(error.response?.data?.message || "Login failed")
+        } finally {
+          // ALWAYS clear loading state, regardless of success or failure
+          set({ isLoading: false })
         }
       },
 
       signup: async (name, email, password) => {
         set({ isLoading: true })
         try {
-          await ApiService.post<{ status: string }>("/auth/signup", { displayName: name, email, password })
+          await ApiService.post<{ status: string }>("/auth/signup", {
+            displayName: name,
+            email,
+            password,
+          })
           // After signup, we log them in
           await get().login(email, password)
         } catch (error: any) {
-          set({ isLoading: false })
           throw new Error(error.response?.data?.message || "Signup failed")
+        } finally {
+          // ALWAYS clear loading state, regardless of success or failure
+          set({ isLoading: false })
         }
       },
 
@@ -61,7 +74,7 @@ export const useAuthStore = create<IAuthStore>()(
     {
       name: "focusflow-auth-storage",
       version: 1,
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         user: state.user,
       }),
     }
