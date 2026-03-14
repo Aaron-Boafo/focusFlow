@@ -9,6 +9,10 @@ export class ApiService {
     withCredentials: true,
   });
 
+  static {
+    axios.defaults.withCredentials = true;
+  }
+
   private static isRefreshing = false;
   private static refreshSubscribers: ((token: string) => void)[] = [];
 

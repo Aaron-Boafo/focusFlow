@@ -187,12 +187,12 @@ export class AuthController {
     res.clearCookie("access_token", {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "none",
     });
     res.clearCookie("refresh_token", {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "none",
     });
     res.status(200).json({ status: "success", message: "Logged out successfully" });
   };
@@ -203,8 +203,8 @@ export class AuthController {
   private setTokenCookies(res: Response, accessToken: string, refreshToken?: string): void {
     const cookieOptions = {
       httpOnly: true,
-      secure: true, // Always true for production/security enforcement
-      sameSite: "strict" as const,
+      secure: true, // Required for sameSite: "none"
+      sameSite: "none" as const,
     };
 
     res.cookie("access_token", accessToken, {
