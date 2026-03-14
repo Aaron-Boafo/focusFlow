@@ -32,7 +32,11 @@ export class ApiService {
         const { config, response } = error;
         const originalRequest = config;
 
-        if (response?.status === 401 && !originalRequest._retry) {
+        if (
+          response?.status === 401 && 
+          !originalRequest._retry && 
+          !originalRequest.url?.includes("/auth/refresh")
+        ) {
           if (this.isRefreshing) {
             return new Promise((resolve) => {
               this.addRefreshSubscriber(() => {
