@@ -52,7 +52,7 @@ export function WeeklyProductivityChart() {
   const chartConfig = {
     hours: {
       label: "Focus Hours",
-      color: "hsl(var(--primary))",
+      color: "var(--primary)",
     },
   }
 

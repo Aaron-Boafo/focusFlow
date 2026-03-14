@@ -331,29 +331,31 @@ export default function SettingsPage() {
             </h3>
           </div>
           <div className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="group relative">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-primary/10 text-xl font-bold text-primary dark:border-slate-700">
-                  {getInitials(isAuthenticated ? (authUser?.name || "User") : "Guest")}
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-4">
+              <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-1">
+                <div className="group relative">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-slate-50 bg-primary/10 text-xl font-bold text-primary dark:border-slate-700">
+                    {getInitials(isAuthenticated ? (authUser?.name || "User") : "Guest")}
+                  </div>
+                  <button className="absolute right-0 bottom-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
+                    <Edit2 className="h-3 w-3" />
+                  </button>
                 </div>
-                <button className="absolute right-0 bottom-0 rounded-full border-2 border-white bg-primary p-1 text-white dark:border-slate-900">
-                  <Edit2 className="h-3 w-3" />
-                </button>
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-slate-900 dark:text-white">
-                  {displayName}
-                </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {isAuthenticated ? authUser?.email : "guest@focusflow.demo"}
-                </p>
+                <div className="text-center sm:text-left font-bold text-slate-900 dark:text-white">
+                  <p>
+                    {displayName}
+                  </p>
+                  <p className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                    {isAuthenticated ? authUser?.email : "guest@focusflow.demo"}
+                  </p>
+                </div>
               </div>
               
               <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogTrigger asChild>
                   <button 
                     disabled={!isAuthenticated}
-                    className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Manage Account
                   </button>

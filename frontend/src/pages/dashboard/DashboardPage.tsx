@@ -100,10 +100,10 @@ export default function OverviewPage() {
             {/* Task Stats */}
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                <div className="rounded-lg bg-green-500/10 p-2 text-green-500">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
-                <span className="rounded-full bg-green-500/10 px-2 py-1 text-xs font-bold text-green-500">
+                <span className="rounded-full px-2 py-1 text-xs font-bold text-primary">
                   {tasksGrowth}
                 </span>
               </div>
@@ -124,7 +124,7 @@ export default function OverviewPage() {
                 <div className="rounded-lg bg-primary/10 p-2 text-primary">
                   <Timer className="h-6 w-6" />
                 </div>
-                <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
+                <span className="rounded-full px-2 py-1 text-xs font-bold text-primary">
                   {sessionStats?.sessionsGrowth || "0%"}
                 </span>
               </div>
@@ -139,10 +139,10 @@ export default function OverviewPage() {
             {/* Hours Stats */}
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                <div className="rounded-lg bg-orange-500/10 p-2 text-orange-500">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
                   <Clock className="h-6 w-6" />
                 </div>
-                <span className="rounded-full bg-orange-500/10 px-2 py-1 text-xs font-bold text-orange-500">
+                <span className="rounded-full px-2 py-1 text-xs font-bold text-primary">
                   {sessionStats?.focusHoursGrowth || "0%"}
                 </span>
               </div>
