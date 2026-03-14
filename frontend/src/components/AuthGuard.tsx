@@ -27,6 +27,7 @@ export const GuestGuard = () => {
     return <DashboardSkeleton />
   }
 
+  // Only redirect to dashboard if we are definitely authenticated
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />
   }

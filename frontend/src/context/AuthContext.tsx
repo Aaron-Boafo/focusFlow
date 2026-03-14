@@ -28,19 +28,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const refresh = useCallback(async () => {
-    // Only set loading if we previously though we were authenticated (rehydration from storage)
-    // Otherwise, let guests start immediately while we check in background
-    const wasAuthenticated = useAuthStore.getState().isAuthenticated;
-    if (wasAuthenticated) {
-      useAuthStore.setState({ isLoading: true });
-    }
+    // Always check on mount
+    useAuthStore.setState({ isLoading: true });
 
     try {
       await ApiService.post("/auth/refresh", {})
       await fetchUser()
     } catch (error: any) {
-      // Silently fail for 401s - user is a guest
-      useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })
+      // If we are not authenticated (401), ensure state is cleared
+      useAuthStore.setState({ 
+        user: null, 
+        isAuthenticated: false, 
+        isLoading: false 
+      })
+    } finally {
+      // Ensure loading is always cleared even if fetchUser didn't catch it
+      useAuthStore.setState({ isLoading: false });
     }
   }, [fetchUser])
 

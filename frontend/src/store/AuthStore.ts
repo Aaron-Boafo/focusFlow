@@ -62,8 +62,7 @@ export const useAuthStore = create<IAuthStore>()(
       name: "focusflow-auth-storage",
       version: 1,
       partialize: (state) => ({ 
-        user: state.user, 
-        isAuthenticated: state.isAuthenticated 
+        user: state.user,
       }),
     }
   )
