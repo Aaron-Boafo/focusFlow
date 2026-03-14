@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAppStore } from "@/store/useAppStore"
+import { useProjectStore } from "@/store/ProjectStore"
+import { useExpStore } from "@/store/ExpStore"
 import { SessionStore } from "@/store/SessionStore"
 import type { SessionType } from "@/types"
 import { Settings, Pause, Play, AlertCircle, CheckCircle2 } from "lucide-react"
@@ -32,6 +34,14 @@ export default function FocusModePage() {
   const completeSession = SessionStore((state) => state.completeSession)
   const endSession = SessionStore((state) => state.endSession)
   const setActiveSession = SessionStore((state) => state.setActiveSession)
+
+  const { level } = useExpStore()
+  const { projects } = useProjectStore()
+
+  // Calculate live task stats
+  const allTasks = projects.flatMap((p) => p.tasks)
+  const tasksCompletedToday = allTasks.filter((t) => t.status === "Done").length
+  const totalTasksToday = allTasks.length
 
   // Extract initialization settings from URL
   const initialMinutes = useMemo(
@@ -121,7 +131,10 @@ export default function FocusModePage() {
           <h2 className="text-lg font-bold tracking-tight">FocusFlow</h2>
         </div>
         <div>
-          <button className="rounded-full p-2 text-slate-500 transition-colors hover:bg-primary/10 dark:text-slate-400">
+          <button 
+            onClick={() => navigate("/settings")}
+            className="rounded-full p-2 text-slate-500 transition-colors hover:bg-primary/10 dark:text-slate-400"
+          >
             <Settings className="h-6 w-6" />
           </button>
         </div>
@@ -241,19 +254,19 @@ export default function FocusModePage() {
         <div className="flex flex-wrap justify-center gap-6 rounded-2xl border border-white/20 bg-white/40 px-6 py-3 backdrop-blur-md md:gap-12 dark:border-slate-700/30 dark:bg-slate-800/40">
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-medium tracking-tighter text-slate-400 uppercase md:text-xs">
-              Current Task
+              XP Level
             </span>
             <span className="text-xs font-semibold text-slate-700 md:text-sm dark:text-slate-200">
-              Design System UI Architecture
+              Level {level}
             </span>
           </div>
           <div className="hidden w-px bg-slate-200 md:block dark:bg-slate-700"></div>
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-medium tracking-tighter text-slate-400 uppercase md:text-xs">
-              Daily Goal
+              Task Progress
             </span>
             <span className="text-xs font-semibold text-slate-700 md:text-sm dark:text-slate-200">
-              4 / 8 hours
+              {tasksCompletedToday} / {totalTasksToday} Tasks
             </span>
           </div>
         </div>

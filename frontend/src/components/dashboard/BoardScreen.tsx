@@ -5,9 +5,14 @@ import { PlusSquare, Target } from "lucide-react"
 import {
   DndContext,
   closestCorners,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { DragOverlay } from "@dnd-kit/core"
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { useState } from "react"
 import { KanbanCard } from "@/components/dashboard/KanbanCard"
 import { Link, useParams } from "react-router-dom"
@@ -80,6 +85,17 @@ export function BoardScreen() {
     setActiveTask(null)
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
       {/* Header */}
@@ -114,6 +130,7 @@ export function BoardScreen() {
       {/* Kanban Board */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <DndContext
+          sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
