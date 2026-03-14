@@ -28,28 +28,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const refresh = useCallback(async () => {
-    // Always check on mount
+    // Explicitly start loading
     useAuthStore.setState({ isLoading: true });
 
     try {
+      // First try to refresh the session cookie
       await ApiService.post("/auth/refresh", {})
+      // Then fetch the actual user data
       await fetchUser()
     } catch (error: any) {
-      // If we are not authenticated (401), ensure state is cleared
+      // If ANY part fails, we are definitely a guest
       useAuthStore.setState({ 
         user: null, 
-        isAuthenticated: false, 
+        isAuthenticated: false,
         isLoading: false 
       })
     } finally {
-      // Ensure loading is always cleared even if fetchUser didn't catch it
+      // Final guard to ensure we NEVER stay stuck in a loading state
       useAuthStore.setState({ isLoading: false });
     }
   }, [fetchUser])
 
   useEffect(() => {
     ApiService.setupInterceptors(() => {
-      useAuthStore.setState({ user: null, isAuthenticated: false })
+      // CLEAR LOADING state here too, otherwise guards stay stuck in skeleton
+      useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })
     })
   }, [])
 
