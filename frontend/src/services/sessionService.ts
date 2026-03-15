@@ -22,6 +22,10 @@ export class SessionService {
     await ApiService.delete(`${this.baseURL}/${id}`);
   }
 
+  static async deleteMultipleSessions(ids: string[]): Promise<void> {
+    await ApiService.delete(`${this.baseURL}/bulk`, { ids });
+  }
+
   static async syncSessions(sessions: Session[]): Promise<void> {
     await ApiService.post(`${this.baseURL}/sync`, { sessions });
   }

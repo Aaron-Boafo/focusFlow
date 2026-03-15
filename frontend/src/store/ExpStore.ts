@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { createZustandStorage } from "@/services/storageService"
+import { ApiService } from "@/services/apiService"
 import type { IExpStore } from "@/types"
 
 // Logic: Level n -> Level n+1 requires 100 + (n-1)*20 XP.
@@ -76,6 +77,25 @@ export const useExpStore = create<IExpStore>()(
             streak: currentStreak
           }
         })
+
+        // Sync with cloud after a short delay or immediately
+        get().syncWithCloud()
+      },
+
+      syncWithCloud: async () => {
+        const state = get()
+        try {
+          await ApiService.post("/auth/sync-profile", {
+            totalExp: state.totalExp,
+            streak: state.streak,
+            xpLevel: state.level,
+            xpTitle: state.getXpTitle(),
+            xpProgress: state.getExpSinceLastLevel() / state.getExpForNextLevel(state.level) * 100,
+            xpToNext: state.getExpForNextLevel(state.level) - state.getExpSinceLastLevel()
+          })
+        } catch (error) {
+          console.error("Failed to sync XP with cloud:", error)
+        }
       },
 
       getExpForNextLevel: (currentLevel) => {

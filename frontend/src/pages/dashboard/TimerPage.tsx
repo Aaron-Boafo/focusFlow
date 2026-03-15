@@ -200,13 +200,15 @@ export default function TimerPage() {
       </div>
 
       {/* XP Reward Hint */}
-      <div className="mt-8 flex items-center gap-2 text-slate-500 dark:text-slate-400">
-        <Trophy className="h-5 w-5 text-amber-500" />
-        <span className="text-sm">
-          Complete this session to earn{" "}
-          <strong className="text-slate-900 dark:text-white">+50 XP</strong>
-        </span>
-      </div>
+      {activeTab === "Focus" && (
+        <div className="mt-8 flex items-center gap-2 text-slate-500 dark:text-slate-400">
+          <Trophy className="h-5 w-5 text-amber-500" />
+          <span className="text-sm">
+            Complete this session to earn{" "}
+            <strong className="text-slate-900 dark:text-white">+{selectedMinutes} XP</strong>
+          </span>
+        </div>
+      )}
 
       {/* Control Buttons */}
       <div className="mt-12 flex items-center gap-6">

@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   KanbanSquare,
   Timer,
+  Trophy,
   History as HistoryIcon,
   BarChart2,
   Settings,
@@ -87,6 +88,20 @@ export function AppSidebar() {
                 <Link to="/timer">
                   <Timer className="h-5 w-5" />
                   <span className="text-sm">Sessions</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Leaderboard"
+                isActive={isActive("/leaderboard")}
+                className="gap-3 rounded-lg py-5 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-[active=true]:bg-primary/10 data-[active=true]:text-primary"
+              >
+                <Link to="/leaderboard">
+                  <Trophy className="h-5 w-5" />
+                  <span className="text-sm">Leaderboard</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

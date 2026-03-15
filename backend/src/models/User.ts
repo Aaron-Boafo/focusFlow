@@ -17,6 +17,7 @@ export interface User {
   plan: string;
   
   // Progression
+  totalExp: number;
   xpLevel: number;
   xpTitle: string;
   xpProgress: number; // 0-100

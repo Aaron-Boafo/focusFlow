@@ -39,6 +39,7 @@ export const SessionStore = create<ISessionStore>()(
 
         if (useAuthStore.getState().isAuthenticated) {
           SessionService.createSession(newSession).catch(err => console.error("Sync error:", err))
+          useAuthStore.getState().updateStatus("Focusing")
         }
         
         return id
@@ -57,21 +58,49 @@ export const SessionStore = create<ISessionStore>()(
       },
 
       completeSession: (id) => {
+        const session = get().history.find(s => s.id === id)
+        if (!session) return
+
+        const xpEarned = session.type === "Focus" ? Math.floor(session.elapsedTime / 60) : 0
+        
         set((state) => ({
           history: state.history.map((s) =>
-            s.id === id ? { ...s, status: "complete", elapsedTime: s.duration } : s
+            s.id === id ? { ...s, status: "complete", elapsedTime: s.duration, exp: xpEarned } : s
           ),
           isPaused: false,
         }))
+
+        import('./ExpStore').then(module => {
+          module.useExpStore.getState().addExp(xpEarned)
+        })
+
+        if (useAuthStore.getState().isAuthenticated) {
+          useAuthStore.getState().updateStatus("Idle")
+        }
       },
 
       endSession: (id) => {
+        const session = get().history.find(s => s.id === id)
+        if (!session) return
+
+        const xpEarned = session.type === "Focus" ? Math.floor(session.elapsedTime / 60) : 0
+
         set((state) => ({
           history: state.history.map((s) =>
-            s.id === id ? { ...s, status: "ended" } : s
+            s.id === id ? { ...s, status: "ended", exp: xpEarned } : s
           ),
           isPaused: false,
         }))
+
+        if (xpEarned > 0) {
+          import('./ExpStore').then(module => {
+            module.useExpStore.getState().addExp(xpEarned)
+          })
+        }
+
+        if (useAuthStore.getState().isAuthenticated) {
+          useAuthStore.getState().updateStatus("Idle")
+        }
       },
 
       deleteSession: async (id) => {
@@ -89,6 +118,27 @@ export const SessionStore = create<ISessionStore>()(
           }
         } catch (error) {
           console.error("Failed to delete session:", error)
+          // Rollback on failure
+          set({ history: previousHistory })
+          throw error
+        }
+      },
+
+      deleteMultipleSessions: async (ids) => {
+        const { history } = get()
+        const previousHistory = [...history]
+
+        // Optimistic update
+        set((state) => ({
+          history: state.history.filter((s) => !ids.includes(s.id)),
+        }))
+
+        try {
+          if (useAuthStore.getState().isAuthenticated) {
+            await SessionService.deleteMultipleSessions(ids)
+          }
+        } catch (error) {
+          console.error("Failed to delete multiple sessions:", error)
           // Rollback on failure
           set({ history: previousHistory })
           throw error
@@ -159,7 +209,7 @@ export const SessionStore = create<ISessionStore>()(
         // Handle Completion Side Effects (ONLY IF LEADER)
         if (isComplete && timerSyncService.getIsLeader()) {
           // 0. Award XP
-          const xpEarned = Math.floor(session.duration / 60) // 1 XP per minute focused
+          const xpEarned = session.type === "Focus" ? Math.floor(session.duration / 60) : 0 // Full XP for completion if Focus
           
           set((state) => ({
             history: state.history.map((s) =>
@@ -204,7 +254,12 @@ export const SessionStore = create<ISessionStore>()(
         }
       },
 
-      resetActiveSession: () => set({ activeSessionId: null, isPaused: false }),
+      resetActiveSession: () => {
+        set({ activeSessionId: null, isPaused: false })
+        if (useAuthStore.getState().isAuthenticated) {
+          useAuthStore.getState().updateStatus("Idle")
+        }
+      },
 
       getTodayStats: () => {
         const history = get().history

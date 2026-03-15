@@ -46,6 +46,13 @@ export class AuthController {
         email,
         password: hashedPassword,
         displayName,
+        totalExp: 0,
+        xpLevel: 1,
+        xpTitle: "Novice Focuser",
+        xpProgress: 0,
+        xpToNext: 100,
+        streak: 0,
+        status: "Idle",
         createdAt: new Date().toISOString(),
       });
 
@@ -102,6 +109,10 @@ export class AuthController {
         user: {
           email: userData?.email,
           displayName: userData?.displayName,
+          totalExp: userData?.totalExp || 0,
+          streak: userData?.streak || 0,
+          xpLevel: userData?.xpLevel || 1,
+          xpTitle: userData?.xpTitle || "Novice Focuser",
         },
       });
     } catch (error: any) {
@@ -176,6 +187,37 @@ export class AuthController {
       });
     } catch (error) {
       console.error("GetMe error:", error);
+      res.status(500).json({ status: "error", message: "Internal server error" });
+    }
+  };
+  
+  /**
+   * Syncs user profile stats (totalExp, streak, etc.)
+   */
+  public syncProfile = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        res.status(401).json({ status: "error", message: "Unauthorized" });
+        return;
+      }
+
+      const { totalExp, streak, xpLevel, xpTitle, xpProgress, xpToNext, status } = req.body;
+
+      await db.collection("users").doc(user.email).update({
+        totalExp: totalExp ?? 0,
+        streak: streak ?? 0,
+        xpLevel: xpLevel ?? 1,
+        xpTitle: xpTitle ?? "Novice Focuser",
+        xpProgress: xpProgress ?? 0,
+        xpToNext: xpToNext ?? 100,
+        status: status ?? "Idle",
+        updatedAt: new Date().toISOString()
+      });
+
+      res.status(200).json({ status: "success", message: "Profile synced successfully" });
+    } catch (error) {
+      console.error("SyncProfile error:", error);
       res.status(500).json({ status: "error", message: "Internal server error" });
     }
   };

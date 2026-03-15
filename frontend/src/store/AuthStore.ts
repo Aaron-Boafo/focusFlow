@@ -70,6 +70,22 @@ export const useAuthStore = create<IAuthStore>()(
       skipToDemo: () => {
         set({ isAuthenticated: false, user: null })
       },
+      
+      updateStatus: async (status: string) => {
+        const { user } = get()
+        if (!user) return
+        
+        // Optimistic update
+        set({ user: { ...user, status } })
+        
+        try {
+          await ApiService.post("/auth/sync-profile", { status })
+        } catch (error) {
+          console.error("Failed to sync status:", error)
+          // Don't rollback immediately as status is transient, 
+          // but we log it.
+        }
+      },
     }),
     {
       name: "focusflow-auth-storage",

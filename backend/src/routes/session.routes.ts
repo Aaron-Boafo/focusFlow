@@ -10,6 +10,7 @@ router.use(authenticate);
 router.get("/", (req, res) => SessionController.getSessions(req, res));
 router.post("/", (req, res) => SessionController.createSession(req, res));
 router.put("/:id", (req, res) => SessionController.updateSession(req, res));
+router.delete("/bulk", (req, res) => SessionController.deleteMultipleSessions(req, res));
 router.delete("/:id", (req, res) => SessionController.deleteSession(req, res));
 router.post("/sync", (req, res) => SessionController.syncSessions(req, res));
 

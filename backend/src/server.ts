@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes";
 import sessionRoutes from "./routes/session.routes";
 import storageRoutes from "./routes/storage.routes";
+import leaderboardRoutes from "./routes/leaderboard.routes";
 import cors from "cors";
 
 config({ quiet: true });
@@ -31,6 +32,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/storage", storageRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
 // Health Check
 app.get("/health", (req: Request, res: Response) => {

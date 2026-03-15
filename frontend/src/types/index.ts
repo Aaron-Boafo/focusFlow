@@ -1,10 +1,10 @@
 
 // --- UI & Statistics ---
 export interface IStatistics {
-    label: string;
-    value: string;
-    growth: string;
-    pct: string;
+  label: string;
+  value: string;
+  growth: string;
+  pct: string;
 }
 
 // --- Project Types ---
@@ -108,6 +108,7 @@ export interface ISessionStore {
     totalStreakDays: number
   }
   deleteSession: (id: string) => Promise<void>
+  deleteMultipleSessions: (ids: string[]) => Promise<void>
   fetchHistory: () => Promise<void>
   syncWithCloud: () => Promise<void>
 }
@@ -118,6 +119,11 @@ export interface AuthUser {
   displayName: string
   avatar?: string
   plan?: string
+  totalExp?: number
+  streak?: number
+  xpLevel?: number
+  xpTitle?: string
+  status?: string
   createdAt?: string
 }
 
@@ -129,6 +135,7 @@ export interface IAuthStore {
   signup: (name: string, email: string, pass: string) => Promise<void>
   logout: () => void
   skipToDemo: () => void
+  updateStatus: (status: string) => Promise<void>
 }
 
 export interface AuthResponse {
@@ -146,23 +153,24 @@ export interface AuthContextType {
   logout: () => void
   refresh: () => Promise<void>
   fetchUser: () => Promise<void>
+  updateStatus: (status: string) => Promise<void>
 }
 
 export interface AppState {
-    user: {
-        name: string
-        password?: string
-        plan: string
-        xpLevel: number
-        xpTitle: string
-        xpProgress: number
-        xpToNext: number
-    }
-    isLoading: boolean
-    
-    // Actions
-    updateUser: (data: Partial<AppState["user"]>) => void
-    addFocusSession: (hours: number) => void
+  user: {
+    name: string
+    password?: string
+    plan: string
+    xpLevel: number
+    xpTitle: string
+    xpProgress: number
+    xpToNext: number
+  }
+  isLoading: boolean
+
+  // Actions
+  updateUser: (data: Partial<AppState["user"]>) => void
+  addFocusSession: (hours: number) => void
 }
 
 // --- Storage Types ---
@@ -173,19 +181,41 @@ export interface StorageStrategy {
   clearAll?(): Promise<void>;
 }
 
+// --- Leaderboard Types ---
+export interface LeaderboardEntry {
+  id: string;
+  rank: number;
+  displayName: string;
+  avatar: string;
+  totalExp: number;
+  streak: number;
+  xpLevel: number;
+  xpTitle: string;
+  status: string;
+}
+
+export interface ILeaderboardStore {
+  entries: LeaderboardEntry[];
+  isLoading: boolean;
+  filter: "Weekly" | "Monthly" | "All Time";
+
+  fetchLeaderboard: () => Promise<void>;
+  setFilter: (filter: ILeaderboardStore["filter"]) => void;
+}
+
 // --- Legacy/Common Types ---
 export type KanbanStatus = "todo" | "in-progress" | "done"
 
 export interface KanbanTask {
-    id: string
-    title: string
-    description: string
-    status: KanbanStatus
-    priority: "High Priority" | "Medium" | "Low" | "Completed" | "In Review"
-    xp: number
-    assignees?: string[] // avatar URLs
-    date?: string
-    progress?: number // 0-100 for "In Progress" tasks
-    attachments?: number
-    checklistData?: string // e.g. "8/12"
+  id: string
+  title: string
+  description: string
+  status: KanbanStatus
+  priority: "High Priority" | "Medium" | "Low" | "Completed" | "In Review"
+  xp: number
+  assignees?: string[] // avatar URLs
+  date?: string
+  progress?: number // 0-100 for "In Progress" tasks
+  attachments?: number
+  checklistData?: string // e.g. "8/12"
 }

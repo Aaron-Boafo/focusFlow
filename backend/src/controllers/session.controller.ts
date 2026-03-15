@@ -16,8 +16,8 @@ export class SessionController {
     try {
       const userId = req.user?.uid;
       if (!userId) {
-         res.status(401).json({ status: "error", message: "Unauthorized" });
-         return;
+        res.status(401).json({ status: "error", message: "Unauthorized" });
+        return;
       }
 
       const snapshot = await this.collection.where("userId", "==", userId).orderBy("startTime", "desc").get();
@@ -26,7 +26,7 @@ export class SessionController {
       res.status(200).json({ status: "success", data: sessions });
     } catch (error: any) {
       console.error("Error fetching sessions:", error);
-      res.status(500).json({ status: "error", message: error.message });
+      res.status(500).json({ status: "error", message: "Failed to fetch sessions" });
     }
   }
 
@@ -36,8 +36,8 @@ export class SessionController {
       const sessionData: Session = req.body;
 
       if (!userId) {
-         res.status(401).json({ status: "error", message: "Unauthorized" });
-         return;
+        res.status(401).json({ status: "error", message: "Unauthorized" });
+        return;
       }
 
       // Ensure userId matches the authenticated user
@@ -61,16 +61,16 @@ export class SessionController {
       const updates = req.body;
 
       if (!userId) {
-         res.status(401).json({ status: "error", message: "Unauthorized" });
-         return;
+        res.status(401).json({ status: "error", message: "Unauthorized" });
+        return;
       }
 
       const docRef = this.collection.doc(id);
       const doc = await docRef.get();
 
       if (!doc.exists || doc.data()?.userId !== userId) {
-         res.status(404).json({ status: "error", message: "Session not found" });
-         return;
+        res.status(404).json({ status: "error", message: "Session not found" });
+        return;
       }
 
       await docRef.update(updates);
@@ -87,8 +87,8 @@ export class SessionController {
       const { sessions }: { sessions: Session[] } = req.body;
 
       if (!userId) {
-         res.status(401).json({ status: "error", message: "Unauthorized" });
-         return;
+        res.status(401).json({ status: "error", message: "Unauthorized" });
+        return;
       }
 
       const batch = db.batch();
@@ -113,22 +113,58 @@ export class SessionController {
       const userId = req.user?.uid;
 
       if (!userId) {
-         res.status(401).json({ status: "error", message: "Unauthorized" });
-         return;
+        res.status(401).json({ status: "error", message: "Unauthorized" });
+        return;
       }
 
       const docRef = this.collection.doc(id);
       const doc = await docRef.get();
 
       if (!doc.exists || doc.data()?.userId !== userId) {
-         res.status(404).json({ status: "error", message: "Session not found" });
-         return;
+        res.status(404).json({ status: "error", message: "Session not found" });
+        return;
       }
 
       await docRef.delete();
       res.status(200).json({ status: "success", message: "Session deleted" });
     } catch (error: any) {
       console.error("Error deleting session:", error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  }
+
+  static async deleteMultipleSessions(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.uid;
+      const { ids }: { ids: string[] } = req.body;
+
+      if (!userId) {
+        res.status(401).json({ status: "error", message: "Unauthorized" });
+        return;
+      }
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        res.status(400).json({ status: "error", message: "No session IDs provided" });
+        return;
+      }
+
+      const batch = db.batch();
+
+      // Verify ownership and add to batch
+      const snapshots = await Promise.all(ids.map(id => this.collection.doc(id).get()));
+
+      for (const doc of snapshots) {
+        if (!doc.exists || doc.data()?.userId !== userId) {
+          continue; // Skip if not found or not owned
+        }
+        batch.delete(doc.ref);
+      }
+
+      await batch.commit();
+
+      res.status(200).json({ status: "success", message: `${ids.length} sessions deletion processed` });
+    } catch (error: any) {
+      console.error("Error deleting multiple sessions:", error);
       res.status(500).json({ status: "error", message: error.message });
     }
   }
