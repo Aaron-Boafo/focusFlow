@@ -57,6 +57,7 @@ export interface IExpStore {
   dailyGoal: number
   history: Record<string, number> // date -> xp
   getWeeklyStatus: () => boolean[] // last 7 days
+  syncWithCloud: () => Promise<void>
 }
 
 // --- Session Types ---

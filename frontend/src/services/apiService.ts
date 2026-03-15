@@ -87,8 +87,8 @@ export class ApiService {
     return response.data;
   }
 
-  static async delete<T>(endpoint: string): Promise<T> {
-    const response = await this.api.delete<T>(endpoint);
+  static async delete<T>(endpoint: string, data?: any): Promise<T> {
+    const response = await this.api.delete<T>(endpoint, { data });
     return response.data;
   }
 }

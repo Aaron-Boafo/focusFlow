@@ -9,7 +9,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { user, isAuthenticated, isLoading, login, signup, logout } =
+  const { user, isAuthenticated, isLoading, login, signup, logout, updateStatus } =
     useAuthStore()
 
   const fetchUser = useCallback(async () => {
@@ -83,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         refresh,
         fetchUser,
+        updateStatus,
       }}
     >
       {children}
