@@ -74,6 +74,40 @@ export const SessionStore = create<ISessionStore>()(
         }))
       },
 
+      deleteSession: async (id) => {
+        const { history } = get()
+        const previousHistory = [...history]
+        
+        // Optimistic update
+        set((state) => ({
+          history: state.history.filter((s) => s.id !== id),
+        }))
+
+        try {
+          if (useAuthStore.getState().isAuthenticated) {
+            await SessionService.deleteSession(id)
+          }
+        } catch (error) {
+          console.error("Failed to delete session:", error)
+          // Rollback on failure
+          set({ history: previousHistory })
+          throw error
+        }
+      },
+
+      fetchHistory: async () => {
+        if (!useAuthStore.getState().isAuthenticated) return
+
+        set({ isLoading: true })
+        try {
+          const sessions = await SessionService.getSessions()
+          set({ history: sessions, isLoading: false })
+        } catch (error) {
+          console.error("Failed to fetch sessions:", error)
+          set({ isLoading: false })
+        }
+      },
+
       updateSettings: (newSettings) => {
         set((state) => ({
           settings: { ...state.settings, ...newSettings },

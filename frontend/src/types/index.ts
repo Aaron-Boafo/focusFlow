@@ -107,6 +107,8 @@ export interface ISessionStore {
     focusHoursGrowth: string
     totalStreakDays: number
   }
+  deleteSession: (id: string) => Promise<void>
+  fetchHistory: () => Promise<void>
   syncWithCloud: () => Promise<void>
 }
 

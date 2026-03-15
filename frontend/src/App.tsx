@@ -11,6 +11,7 @@ import TimerPage from "@/pages/dashboard/TimerPage"
 import FocusModePage from "@/pages/dashboard/FocusModePage"
 import AnalyticsPage from "@/pages/dashboard/AnalyticsPage"
 import SettingsPage from "@/pages/dashboard/SettingsPage"
+import TimerHistoryPage from "@/pages/dashboard/TimerHistoryPage"
 import NotFoundPage from "@/pages/NotFoundPage"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -45,6 +46,7 @@ export function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/tasks/*" element={<TaskBoardPage />} />
             <Route path="/timer" element={<TimerPage />} />
+            <Route path="/history" element={<TimerHistoryPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
