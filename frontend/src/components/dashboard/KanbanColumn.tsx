@@ -47,7 +47,7 @@ export function KanbanColumn({
       {/* Droppable Area */}
       <div
         ref={setNodeRef}
-        className={`kanban-column flex min-h-[500px] flex-col gap-4 rounded-xl border-2 p-2 transition-colors ${containerClass} ${
+        className={`kanban-column flex min-h-[200px] flex-col gap-4 rounded-xl border-2 p-2 transition-colors touch-none ${containerClass} ${
           isOver ? "border-primary bg-primary/5 dark:bg-primary/10" : "border-dashed"
         }`}
       >

@@ -128,3 +128,8 @@
     @apply font-sans;
     }
 }
+
+.dnd-kit-dragging {
+  touch-action: none !important;
+  overflow: hidden !important;
+}

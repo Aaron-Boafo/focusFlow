@@ -4,15 +4,17 @@ import { Button } from "@/components/ui/button"
 import { PlusSquare, Target } from "lucide-react"
 import {
   DndContext,
-  closestCorners,
+  rectIntersection,
   PointerSensor,
   TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
+  autoScroll,
 } from "@dnd-kit/core"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { DragOverlay } from "@dnd-kit/core"
+import { useEffect } from "react"
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { useState } from "react"
 import { KanbanCard } from "@/components/dashboard/KanbanCard"
@@ -58,10 +60,12 @@ export function BoardScreen() {
     const { active } = event
     const task = tasks.find((t) => t.id === active.id)
     if (task) setActiveTask(task)
+    document.body.classList.add("dnd-kit-dragging")
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { over } = event
+    document.body.classList.remove("dnd-kit-dragging")
     
     if (over && activeTask && projectId) {
       const statusMap: Record<string, string> = {
@@ -138,9 +142,10 @@ export function BoardScreen() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={rectIntersection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          autoScroll={{ axis: "y" }}
         >
           <KanbanColumn
             id="todo"
@@ -177,7 +182,11 @@ export function BoardScreen() {
           />
 
           <DragOverlay>
-            {activeTask ? <KanbanCard task={activeTask} /> : null}
+            {activeTask ? (
+              <div className="touch-none">
+                <KanbanCard task={activeTask} />
+              </div>
+            ) : null}
           </DragOverlay>
         </DndContext>
       </div>
