@@ -33,8 +33,8 @@ export class ApiService {
         const originalRequest = config;
 
         if (
-          response?.status === 401 && 
-          !originalRequest._retry && 
+          response?.status === 401 &&
+          !originalRequest._retry &&
           !originalRequest.url?.includes("/auth/refresh")
         ) {
           if (this.isRefreshing) {
