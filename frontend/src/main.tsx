@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider.tsx"
 import { AuthProvider } from "@/context/AuthContext"
 
 createRoot(document.getElementById("root")!).render(
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="light">
       <AuthProvider>
         <BrowserRouter>
           <App />
