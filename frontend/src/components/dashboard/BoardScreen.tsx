@@ -10,11 +10,9 @@ import {
   KeyboardSensor,
   useSensor,
   useSensors,
-  autoScroll,
 } from "@dnd-kit/core"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import { DragOverlay } from "@dnd-kit/core"
-import { useEffect } from "react"
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { useState } from "react"
 import { KanbanCard } from "@/components/dashboard/KanbanCard"
@@ -145,7 +143,6 @@ export function BoardScreen() {
           collisionDetection={rectIntersection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          autoScroll={{ axis: "y" }}
         >
           <KanbanColumn
             id="todo"
